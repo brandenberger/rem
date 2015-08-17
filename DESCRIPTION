@@ -1,9 +1,11 @@
 Package: rem
 Type: Package
-Title: What the package does (short line)
+Title: Relational Event Models (REM)
 Version: 1.0
 Date: 2015-08-17
 Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: More about what it does (maybe more than one line)
+Description: Creating endogenous statistics and estimating Relational Event Models (REM).
 License: What license is it under?
+LinkingTo: Rcpp
+Suggests: xergm, texreg, statnet

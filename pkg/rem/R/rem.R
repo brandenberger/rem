@@ -10,6 +10,7 @@
 # TODO 2: add progress bar to functions (and set showprogressbar = TRUE)
 # TODO 3: add real function names to all the stop()-outputs - if possible
 # TODO 4: OPENMP - implement paralells in cpp-Functions
+# TODO 5: tidy up functions - within 80char/line
 
 ####################################################################
 ##  Inertia
@@ -2819,6 +2820,181 @@ get.similarity.stat <- function(data, time, sender, target,
   }
 
 ####################################################################
-##  
+##  Create event sequence
 ####################################################################
+
+create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
+                                  type = "continuous", byTime = "1 day",
+                                  excludeDate = NULL, excludeTypeOfDay = NULL,
+                                  excludeYear = NULL, excludeFrom = NULL, 
+                                  excludeTo = NULL, returnData = FALSE, 
+                                  sortData = TRUE, ...){
+  
+  #### check if all the inputs are correct
+  ## check if date and dateformat match => then create Date-object
+  if (type == "continuous"){
+    date <- as.Date(datevar, format = dateformat)
+    if (is.na(date[1])){
+      stop("'dateformat' does not match structure of 'datevar'.")
+    }
+  }
+  
+  ## cannot specify "ordinal" and then exclude variables!
+  if ( type == "ordinal"){
+    if ( is.null(excludeDate) == FALSE | is.null(excludeTypeOfDay) == FALSE |
+           is.null(excludeYear) == FALSE | is.null(excludeFrom) == FALSE |
+           is.null(excludeTo) == FALSE ){
+      stop("Cannot exclude dates if type 'ordinal' is selected.")
+    }
+  }
+  
+  ## cannot specify returnData and not provide data-object
+  if (returnData == TRUE & is.null(data)){
+    stop("Provide 'data'-element if 'returnData = TRUE' is set.")
+  }
+  
+  ## check if both excludeFrom and excludeTO are set
+  if ( (is.null(excludeFrom) == FALSE & is.null(excludeTo)) | 
+         (is.null(excludeFrom) & is.null(excludeTo)==FALSE) ){
+    stop("Both 'excludeFrom' and 'excludeTo' variables need to be specified.")
+  }
+  
+  ## check if excludeFrom is smaller than excludeTo
+  if ( is.null(excludeFrom) == FALSE & is.null(excludeTo) == FALSE) {
+    if ( as.Date(excludeFrom, 
+                 format = dateformat) > as.Date(excludeTo,format = dateformat) ){
+      stop("'excludeFrom' is smaller than 'excludeTo'.")
+    }
+  }
+  
+  ## check if type is specified correctly (either "continuous" or "ordinal")
+  if ( type == "continuous" | type == "ordinal"){  
+  }else{
+    stop("'type' not specified correctly. Choose 'continuous' or 'ordinal' as
+         event sequence options.")
+  }
+  
+  ## send warning: if you choose "order" but not "returnData"
+  if ( sortData == TRUE & returnData == FALSE){
+    warning("Do not match output variable directly to your data if your data is
+            not sorted. Choose 'returnData = TRUE' and 'orderData = TRUE'
+            to make sure your data set has not been tarnished.")
+  }
+  
+  #### create continuous event sequence
+  if (type == "continuous"){   
+    
+    ## create artificial sequence from start to end
+    sequence <- data.frame(seq(min(date), max(date), byTime))
+    names(sequence) <- "date.sequence"
+    
+    ## erase whatever
+    ## TODO: exclude only these, that do not delete entire data set! 
+    if ( is.null(excludeDate) == FALSE){
+      ## exlcude some of them
+      for (i in excludeDate){
+        sequence <- subset(sequence, sequence$date.sequence != i)
+      }
+    }
+    
+    if ( is.null(excludeTypeOfDay) == FALSE){
+      ## add type of day
+      ## depending on your locale, the weekdays will be named different, 
+      ## http://stackoverflow.com/questions/17031002/get-weekdays-in-english-in-rstudio
+      sequence$weekday <- weekdays(sequence$date.sequence)
+      ## exlcude some of them
+      for (i in excludeTypeOfDay){
+        sequence <- subset(sequence, sequence$weekday != i)
+      }
+    }
+    
+    if ( is.null(excludeYear) == FALSE){
+      ## add year to sequence    
+      sequence$year <- as.numeric(format(sequence$date.sequence, "%Y"))
+      for (i in excludeYear){
+        sequence <- subset(sequence, sequence$year != i)
+      }
+    }
+    
+    if ( is.null(excludeFrom)==FALSE & is.null(excludeTo)==FALSE ){
+      sequence$erase <- ifelse((sequence$date.sequence < 
+                                  as.Date(excludeFrom, format = dateformat) | 
+                                  sequence$date.sequence > 
+                                  as.Date(excludeTo, format = dateformat)), 1, 0)
+      sequence <- subset(sequence, sequence$erase == 1)
+    }
+    
+    ## give artificial sequence 1:length()
+    sequence$event.sequence <- 1:length(sequence$date.sequence)
+    
+    ## match with datevar
+    result <- sequence$event.sequence[match(date, sequence$date.sequence)]
+    
+    ## return data
+    if ( returnData == FALSE){
+      if ( sortData == FALSE){
+        return(result)
+      }else{
+        result <- sort(result)
+        return(result)
+      }     
+    }else{
+      ## unsorted:
+      data <- cbind(data, result)
+      names(data)[length(data)] <- "event.seq.cont"
+      if ( sortData == FALSE ){
+        return(data)
+      }else{ ## sorted:
+        data <- data[order(data$event.seq.cont), ]
+        return(data)
+      }
+    }
+    
+    #### create ordinal event sequence 
+  }else if (type == "ordinal"){
+    ## create ordered data-sequence    
+    sequence <- data.frame(datevar)
+    ## if no dateformat is specified: is there no need for it? test it and report.
+    if ( is.null(dateformat) ){
+      temp <- as.numeric(as.character(sequence$datevar))
+      if ( is.na(temp[1])){
+        stop("'datevar' is not numeric. Provide numeric 'datevar' or use 
+             dateformat to specify the datevar correctly.")
+      }
+      sequence <- sequence[order(sequence$datevar), ]
+      sequence$date.sequence <- datevar
+      }else{
+        sequence$date.sequence <- as.Date(as.character(sequence$datevar), 
+                                          format = dateformat)
+        sequence <- sequence[order(sequence$date.sequence), ]
+      }
+    
+    ## create ordinal sequence on ordered seq
+    sequence$event.sequence <- as.numeric(as.factor(sequence$date.sequence))
+    
+    ## match with datevar
+    result <- sequence$event.sequence[match(datevar, sequence$datevar)]
+    
+    ## return data
+    if ( returnData == FALSE){
+      if ( sortData == FALSE){
+        return(result)
+      }else{
+        result <- sort(result)
+        return(result)
+      }
+    }else{
+      ## unsorted:
+      data <- cbind(data, result)
+      names(data)[length(data)] <- "event.seq.ord"
+      if ( sortData == FALSE ){
+        return(data)
+      }else{ ## sorted:
+        data <- data[order(data$event.seq.ord), ]
+        return(data)
+      }
+    }#closes if-else returnData    
+  }#closes type == ordinal
+}
+
 

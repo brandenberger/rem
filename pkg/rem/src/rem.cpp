@@ -4,6 +4,8 @@ using namespace Rcpp;
 
 // line for multiple processing: #pragma parallel =>  OpenMP Cheat Sheet
   
+//TODO: tidy up functions - within 80char/line
+  
   
 //####################################################################
 //####################################################################

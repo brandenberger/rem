@@ -401,6 +401,201 @@ NumericVector degreeCpp(
   return Rcpp::wrap(result);
 }
 
+//####################################################################
+// [[Rcpp::export]]
+NumericVector degreeOneModeCpp(
+  NumericVector time,
+  NumericVector weightvar,
+  std::vector<std::string> degreevar,
+  std::vector<std::string> degreeothermodevar,
+  std::vector<std::string> typevar,
+  std::string type1, 
+  std::string type2, 
+  std::vector<std::string> attrvar,
+  std::string attr1,
+  std::string attr2, 
+  double xlog, 
+  std::string degreetype ) {
+  
+  NumericVector result(degreevar.size());
+  
+  // for-loop i: for each event, do:
+    for ( int i = 0; i < degreevar.size(); i++){
+      
+      // reset all the variables
+      double degree = 0;
+      double totaldegree = 0;
+      double weight = 0;
+      double resulttemp = 0;
+      
+      // for-loop w: go back over all events and filter them
+      for ( int w = 0; w < i; w++ ){
+        
+        // degreevar only
+        if ( degreetype == "d-only" ){
+          if ( degreeothermodevar[w] == degreevar[i]  ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typematch 
+        if ( degreetype == "d-typematch" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == typevar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typemix
+        if ( degreetype == "d-typemix" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[i] == type1 && typevar[w] == type2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typefilter
+        if ( degreetype == "d-typefilter" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == type1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-attributematch
+        if ( degreetype == "d-attributematch" ){
+          if ( degreeothermodevar[w] == degreevar[i] && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-attributemix
+        if ( degreetype == "d-attributemix" ){
+          if ( degreeothermodevar[w] == degreevar[i] && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-attributefilter
+        if ( degreetype == "d-attributefilter" ){
+          if ( degreeothermodevar[w] == degreevar[i] && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typematch-attributematch
+        if ( degreetype == "d-typematch-attributematch" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == typevar[i] && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typematch-attributemix
+        if ( degreetype == "d-typematch-attributemix" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == typevar[i] && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typematch-attributefilter
+        if ( degreetype == "d-typematch-attributefilter" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == typevar[i] && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typemix-attributematch
+        if ( degreetype == "d-typemix-attributematch" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typemix-attributemix
+        if ( degreetype == "d-typemix-attributemix" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typemix-attributefilter
+        if ( degreetype == "d-typemix-attributefilter" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typefilter-attributematch
+        if ( degreetype == "d-typefilter-attributematch" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == type1 && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typefilter-attributemix
+        if ( degreetype == "d-typefilter-attributemix" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == type1 && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // degree-typefilter-attributefilter
+        if ( degreetype == "d-typefilter-attributefilter" ){
+          if ( degreeothermodevar[w] == degreevar[i] && typevar[w] == type1 && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        //
+          // calculate the weight
+        if ( time[i] == time[w] ){
+          totaldegree = totaldegree + 0;
+        } else {
+          degree = weight * exp( - ( time[i] - time[w] ) * xlog) * xlog ;
+          totaldegree = totaldegree + degree;
+        }
+        
+        resulttemp = totaldegree;
+      } // closes w-loop
+      
+      // ascribe calculated weights to the result-variable		
+      result[i] = resulttemp;
+      
+    } // closes i-loop
+  
+  // return variable and hand it back to R
+  return Rcpp::wrap(result);
+}
+
 
 
 //####################################################################
@@ -1491,3 +1686,304 @@ NumericVector similarityComplexCpp(
   return Rcpp::wrap(result);
 }
 
+//####################################################################
+// [[Rcpp::export]]
+NumericVector reciprocityCpp(
+  NumericVector time,
+  NumericVector weightvar,
+  std::vector<std::string> sender,
+  std::vector<std::string> target,
+  std::vector<std::string> typevar,
+  std::string type1, 
+  std::string type2, 
+  std::vector<std::string> attrvar,
+  std::string attr1,
+  std::string attr2, 
+  double xlog, 
+  std::string reciprocitytype ) {
+  
+  NumericVector result(sender.size());
+  
+  // for-loop i: for each event, do:
+  for ( int i = 0; i < sender.size(); i++){
+      
+      // reset all the variables
+      double reciprocity = 0;
+      double totalreciprocity = 0;
+      double weight = 0;
+      double resulttemp = 0;
+      
+      // for-loop w: go back over all events and filter them
+      for ( int w = 0; w < i; w++ ){
+        
+        // sender-target reciprocity only
+        if ( reciprocitytype == "s-t-only" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typematch 
+        if ( reciprocitytype == "s-t-typematch" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == typevar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typemix
+        if ( reciprocitytype == "s-t-typemix" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[i] == type1 && typevar[w] == type2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typefilter
+        if ( reciprocitytype == "s-t-typefilter" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == type1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-attributematch
+        if ( reciprocitytype == "s-t-attributematch" ){
+          if ( target[w] == target[i] && sender[w] == sender[i] && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-attributemix
+        if ( reciprocitytype == "s-t-attributemix" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-attributefilter
+        if ( reciprocitytype == "s-t-attributefilter" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typematch-attributematch
+        if ( reciprocitytype == "s-t-typematch-attributematch" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == typevar[i] && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typematch-attributemix
+        if ( reciprocitytype == "s-t-typematch-attributemix" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == typevar[i] && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typematch-attributefilter
+        if ( reciprocitytype == "s-t-typematch-attributefilter" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == typevar[i] && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typemix-attributematch
+        if ( reciprocitytype == "s-t-typemix-attributematch" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typemix-attributemix
+        if ( reciprocitytype == "s-t-typemix-attributemix" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typemix-attributefilter
+        if ( reciprocitytype == "s-t-typemix-attributefilter" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[i] == type1 && typevar[w] == type2 && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typefilter-attributematch
+        if ( reciprocitytype == "s-t-typefilter-attributematch" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == type1 && attrvar[w] == attrvar[i] ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typefilter-attributemix
+        if ( reciprocitytype == "s-t-typefilter-attributemix" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == type1 && attrvar[i] == attr1 && attrvar[w] == attr2 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        // sender-target-typefilter-attributefilter
+        if ( reciprocitytype == "s-t-typefilter-attributefilter" ){
+          if ( target[w] == sender[i] && sender[w] == target[i] && typevar[w] == type1 && attrvar[w] == attr1 ){
+            weight = std::abs(weightvar[w]);
+          } else {
+            weight = 0;
+          }
+        }
+        
+        //
+          // calculate the weight
+        if ( time[i] == time[w] ){
+          totalreciprocity = totalreciprocity + 0;
+        } else {
+          reciprocity = weight * exp( - ( time[i] - time[w] ) * xlog) * xlog ;
+          totalreciprocity = totalreciprocity + reciprocity;
+        }
+        
+        resulttemp = totalreciprocity;
+      } // closes w-loop
+      
+      // ascribe calculated weights to the result-variable  	
+      result[i] = resulttemp;
+      
+    } // closes i-loop
+  
+  // return variable and hand it back to R
+  return Rcpp::wrap(result);
+}
+
+//####################################################################
+// [[Rcpp::export]]
+NumericVector triadCpp(
+  std::vector<std::string> sender, 
+  std::vector<std::string> target,
+  NumericVector time, 
+  NumericVector weightvar, 
+  std::vector<std::string> typevar, 
+  std::string typeA, 
+  std::string typeB,
+  std::vector<std::string> attributevarAB, 
+  std::string attrAB,
+  std::vector<std::string> attributevarAI,
+  std::string attrAI,
+  std::vector<std::string> attributevarBI,
+  std::string attrBI,
+  double xlog) {
+    
+    NumericVector result(sender.size());
+    double weighta;
+    double weightb;
+    double totalweighta;
+    double totalweightb;
+    double weightab;
+    double totalweight;
+    std::vector<std::string> x;
+    std::vector<std::string> y;
+    std::vector<std::string> v;
+    
+    for ( int i = 0; i < sender.size(); i++){
+      
+      //filter out events i that have attribute attrAB
+      if ( attributevarAB[i] == attrAB ){
+        
+        weightab = 0;
+        totalweight = 0;
+        // clear strings
+        x.clear();
+        y.clear();
+        v.clear();
+        
+        // get list of partners s and t have interacted with
+        for ( int w = 0; w < i-1; w++ ) {       
+          // with whom has sender interacted in the past?
+          if ( sender[w] == sender[i] && target[w] != target[i] && 
+          time[w] != time[i] && typevar[w] == typeA && attributevarAI[w] == attrAI ){
+            x.push_back(target[w]);
+          }
+          if ( target[w] == sender[i] && sender[w] != target[i] &&
+          time[w] != time[i] && typevar[w] == typeA && attributevarAI[w] == attrAI ){
+            x.push_back(sender[w]);
+          }
+          // with whom has target interacted in the past?
+          if ( sender[w] == target[i] && target[w] != sender[i] && 
+          time[w] != time[i] &&  typevar[w] == typeB && attributevarBI[w] == attrBI ){
+            y.push_back(target[w]);
+          }
+          if ( target[w] == target[i] && sender[w] != sender[i] &&
+          time[w] != time[i] && typevar[w] == typeB && attributevarBI[w] == attrBI ){
+            y.push_back(sender[w]);
+          }
+        } // close w-loop
+        
+        //order x and y - and create v: the array that holds all the actors a and 
+        //b have interacted with in the past
+        std::sort(x.begin(),x.end());
+        std::sort(y.begin(),y.end());
+        // find intersection between y and x string entries (http://www.cplusplus.com/reference/algorithm/set_intersection/)
+        std::set_intersection (x.begin(), x.end(), y.begin(), y.end(), std::back_inserter(v) );                                              
+        // remove duplicates from v
+        sort( v.begin(), v.end() );
+        v.erase( unique( v.begin(), v.end() ), v.end() );
+        
+        // for each entry in v
+        for (int j = 0; j < v.size(); j++) {
+          totalweighta = 0;
+          totalweightb = 0;
+          for ( int z = 0; z < i-1; z++ ) {   
+            weighta = 0;
+            weightb = 0;
+            //caluculate weighta
+            if ( (sender[z] == sender[i] && target[z] == v[j]) || 
+            (target[z] == sender[i] && sender[z] == v[j]) && typevar[z] == typeA &&
+            attributevarAI[z] == attrAI && time[z] != time[i] ){
+              weighta = std::abs(weightvar[z]) * exp( - ( time[i] - time[z] ) * xlog) * xlog;
+              totalweighta = totalweighta + weighta;   
+            }
+            //calculate weightb
+            if ( (sender[z] == target[i] && target[z] == v[j]) || 
+            (target[z] == target[i] && sender[z] == v[j]) && typevar[z] == typeB &&
+            attributevarBI[z] == attrBI && time[z] != time[i] ){
+              weightb = std::abs(weightvar[z]) * exp( - ( time[i] - time[z] ) * xlog) * xlog;
+              totalweightb = totalweightb + weightb;   
+            }
+          } //closes z-loop
+          
+          // multiply totalweighta times totalweightb
+          weightab = totalweighta * totalweightb;
+          totalweight = totalweight + weightab;   
+        } //closes j-loop  
+        //take the squared rood of totalweight
+        result[i] = sqrt(totalweight);
+      }//closes if-attrvar == attrAB
+    } // closes i-loop
+    return Rcpp::wrap(result);
+  }

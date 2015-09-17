@@ -7,5 +7,5 @@ Author: Who wrote it
 Maintainer: Who to complain to <yourfault@somewhere.net>
 Description: Creating endogenous statistics and estimating Relational Event Models (REM).
 License: What license is it under?
-LinkingTo: Rcpp
+LinkingTo: Rcpp, flexsurv
 Suggests: xergm, texreg, statnet

@@ -1,2 +1,4 @@
+useDynLib(rem)
+import("methods")
 # export all functions - 
 exportPattern("^[^\\.]")

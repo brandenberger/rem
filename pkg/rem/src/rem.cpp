@@ -1,11 +1,9 @@
-#include <string.h>
+//####################################################################include <string.h>
 #include <Rcpp.h>
 using namespace Rcpp;
-
-// line for multiple processing: #pragma parallel =>  OpenMP Cheat Sheet
   
 //TODO: tidy up functions - within 80char/line
-  
+//TODO: similarity-Average-Total: why does target-sim not have "match"-option for vector w?
   
 //####################################################################
 //####################################################################
@@ -30,7 +28,7 @@ NumericVector inertiaCpp(
   NumericVector result(sender.size());
   
   // for-loop i: for each event, do:
-    for ( int i = 0; i < sender.size(); i++){
+    for ( size_t i = 0; i < sender.size(); i++){
       
       // reset all the variables
       double inertia = 0;
@@ -39,7 +37,7 @@ NumericVector inertiaCpp(
       double resulttemp = 0;
       
       // for-loop w: go back over all events and filter them
-      for ( int w = 0; w < i; w++ ){
+      for ( size_t w = 0; w < i; w++ ){
         
         // sender-target inertia only
         if ( inertiatype == "s-t-only" ){
@@ -225,7 +223,7 @@ NumericVector degreeCpp(
   NumericVector result(degreevar.size());
   
   // for-loop i: for each event, do:
-    for ( int i = 0; i < degreevar.size(); i++){
+    for ( size_t i = 0; i < degreevar.size(); i++){
       
       // reset all the variables
       double degree = 0;
@@ -234,7 +232,7 @@ NumericVector degreeCpp(
       double resulttemp = 0;
       
       // for-loop w: go back over all events and filter them
-      for ( int w = 0; w < i; w++ ){
+      for ( size_t w = 0; w < i; w++ ){
         
         // degreevar only
         if ( degreetype == "d-only" ){
@@ -420,7 +418,7 @@ NumericVector degreeOneModeCpp(
   NumericVector result(degreevar.size());
   
   // for-loop i: for each event, do:
-    for ( int i = 0; i < degreevar.size(); i++){
+    for ( size_t i = 0; i < degreevar.size(); i++){
       
       // reset all the variables
       double degree = 0;
@@ -429,7 +427,7 @@ NumericVector degreeOneModeCpp(
       double resulttemp = 0;
       
       // for-loop w: go back over all events and filter them
-      for ( int w = 0; w < i; w++ ){
+      for ( size_t w = 0; w < i; w++ ){
         
         // degreevar only
         if ( degreetype == "d-only" ){
@@ -641,7 +639,7 @@ NumericVector fourCycleCpp(
   
   
   //for each event (=i-loop open)
-  for ( int i = 0; i < sender.size(); i++){
+  for ( size_t i = 0; i < sender.size(); i++){
     
     //Filter: only current events with given attribute are selected.
     if ( attrvarNow[i] == attrNow ) {
@@ -657,7 +655,7 @@ NumericVector fourCycleCpp(
       totalWeightABC = 0;
       
       // generate a list of issues that $a$ has used in past (j-loop-open) (=w-vector)
-      for ( int j = 0; j < i; j++ ) {
+      for ( size_t j = 0; j < i; j++ ) {
         if (sender[j] == sender[i] && target[j] != target[i] && attrvarAaj[j] == attrAaj){
           w.push_back(target[j]);
         }
@@ -689,13 +687,13 @@ NumericVector fourCycleCpp(
       x.erase( unique( x.begin(), x.end() ), x.end() );
       
       // for each person in the list x (m-loop open) (=y-vector; wy-vector)
-      for (int m = 0; m < x.size(); m++ ) {
+      for (size_t m = 0; m < x.size(); m++ ) {
         
         tempTotalWeightB = 0;
         
         // What did actor say in past? (n-loop open)
         y.clear();
-        for ( int n = 0; n < i; n++ ) {              
+        for ( size_t n = 0; n < i; n++ ) {              
           // for each person: find y-vector (list of targets $i$ has used)
           if (sender[n] != sender[i] && sender[n] == x[m] && target[n] != target[i] && attrvarCij[n] == attrCij ){
             y.push_back(target[n]);
@@ -719,7 +717,7 @@ NumericVector fourCycleCpp(
         // positive/negative four cycle: only choose those events with different type
         if ( fourCycleType == "standard" ){
           if (wy.size() != 0) {
-            for ( int o = 0; o < i; o++ ) {
+            for ( size_t o = 0; o < i; o++ ) {
               weightB = 0;
               if (sender[o] == x[m] && target[o] == target[i] && attrvarBib[o] == attrBib ) {
                 weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
@@ -733,7 +731,7 @@ NumericVector fourCycleCpp(
         }//closes if fourCycleType == standard
         if ( fourCycleType == "positive" ){
           if (wy.size() != 0) {
-            for ( int o = 0; o < i; o++ ) {
+            for ( size_t o = 0; o < i; o++ ) {
               weightB = 0;
               if (sender[o] == x[m] && target[o] == target[i] && typevar[o] == typevar[i] && attrvarBib[o] == attrBib ) {
                 weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
@@ -747,7 +745,7 @@ NumericVector fourCycleCpp(
         }//closes if fourCycleType == positive
         if ( fourCycleType == "negative" ){
           if (wy.size() != 0) {
-            for ( int o = 0; o < i; o++ ) {
+            for ( size_t o = 0; o < i; o++ ) {
               weightB = 0;
               if (sender[o] == x[m] && target[o] == target[i] && typevar[o] != typevar[i] && attrvarBib[o] == attrBib ) {
                 weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
@@ -762,12 +760,12 @@ NumericVector fourCycleCpp(
         
         if ( fourCycleType == "standard"){
           // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
-          for (int p = 0; p < wy.size(); p++) {
+          for (size_t p = 0; p < wy.size(); p++) {
             
             tempTotalWeightA = 0;
             tempTotalWeightC = 0;
             
-            for ( int q = 0; q < i; q++ ) {
+            for ( size_t q = 0; q < i; q++ ) {
               weightA = 0;
               weightC = 0;
               
@@ -800,14 +798,14 @@ NumericVector fourCycleCpp(
         }//closes if fourCycleType == standard
         if ( fourCycleType == "positive" ){
           // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
-          for (int p = 0; p < wy.size(); p++) {
+          for (size_t p = 0; p < wy.size(); p++) {
             
             tempTotalWeightAPositive = 0;
             tempTotalWeightCPositive = 0;
             tempTotalWeightANegative = 0;
             tempTotalWeightCNegative = 0;
             
-            for ( int q = 0; q < i; q++ ) {
+            for ( size_t q = 0; q < i; q++ ) {
               weightA = 0;
               weightC = 0;
               
@@ -860,14 +858,14 @@ NumericVector fourCycleCpp(
         }//closes if fourCycleType == positive
         if ( fourCycleType == "negative" ){
           // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
-          for (int p = 0; p < wy.size(); p++) {
+          for (size_t p = 0; p < wy.size(); p++) {
             
             tempTotalWeightAPositive = 0;
             tempTotalWeightCPositive = 0;
             tempTotalWeightANegative = 0;
             tempTotalWeightCNegative = 0;
             
-            for ( int q = 0; q < i; q++ ) {
+            for ( size_t q = 0; q < i; q++ ) {
               weightA = 0;
               weightC = 0;
               
@@ -963,7 +961,7 @@ NumericVector similarityTotalAverageCpp(
   double numberMatch;
   
   //for each event (i-loop open)
-  for ( int i = 0; i < sender.size(); i++){
+  for ( size_t i = 0; i < sender.size(); i++){
     
     v.clear();
     w.clear();
@@ -976,7 +974,7 @@ NumericVector similarityTotalAverageCpp(
     totalNumber = 0;
     
     // loop back and find actors who said p and concepts that a said
-    for (int j = 0; j < i; j++) {
+    for (size_t j = 0; j < i; j++) {
       if ( senderTargetSim == "sender"){
         if ( matchNomatchSim == "match" ){
           if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute && eventTypeVar[j] == eventTypeVar[i]){
@@ -1007,20 +1005,20 @@ NumericVector similarityTotalAverageCpp(
     v.erase( unique( v.begin(), v.end() ), v.end() );
     
     // for each entry in v
-    for (int k = 0; k < v.size(); k++){
+    for (size_t k = 0; k < v.size(); k++){
       
       x.clear();
       xw.clear();
       
       if ( senderTargetSim == "sender" ){
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (sender[l] == v[k] && time[l] != time[i] && target[l] != target[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(target[l]);
           }
         }//closes l-loop
       }else{
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (target[l] == v[k] && time[l] != time[i] && sender[l] != sender[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(sender[l]);
@@ -1047,7 +1045,7 @@ NumericVector similarityTotalAverageCpp(
         if (xw.size() != 0 ) {
           
           // for each entry in xw:
-            for (int m = 0; m < xw.size(); m++) {
+            for (size_t m = 0; m < xw.size(); m++) {
               
               i_negative.clear();
               i_positive.clear();
@@ -1055,7 +1053,7 @@ NumericVector similarityTotalAverageCpp(
               a_positive.clear();
               
               // loop back over all events until i
-              for (int n = 0; n < i; n++){
+              for (size_t n = 0; n < i; n++){
                 if ( senderTargetSim == "sender" ){
                   if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
                     i_positive.push_back(time[n]);
@@ -1159,7 +1157,7 @@ NumericVector similaritySimpleCpp(
   double weightSim;
   
   //for each event (i-loop open)
-  for ( int i = 0; i < sender.size(); i++){
+  for ( size_t i = 0; i < sender.size(); i++){
     
     v.clear();
     w.clear();
@@ -1172,7 +1170,7 @@ NumericVector similaritySimpleCpp(
     totalNumber = 0;
     
     // loop back and find actors who said p and concepts that a said
-    for (int j = 0; j < i; j++) {
+    for (size_t j = 0; j < i; j++) {
       if ( senderTargetSim == "sender"){
         if ( matchNomatchSim == "match" ){
           if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute && eventTypeVar[j] == eventTypeVar[i]){
@@ -1207,20 +1205,20 @@ NumericVector similaritySimpleCpp(
     counter = 0;
     
     // for each entry in v
-    for (int k = 0; k < v.size(); k++){
+    for (size_t k = 0; k < v.size(); k++){
       
       x.clear();
       xw.clear();
       
       if ( senderTargetSim == "sender" ){
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (sender[l] == v[k] && time[l] != time[i] && target[l] != target[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(target[l]);
           }
         }//closes l-loop
       }else{
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (target[l] == v[k] && time[l] != time[i] && sender[l] != sender[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(sender[l]);
@@ -1247,7 +1245,7 @@ NumericVector similaritySimpleCpp(
         if (xw.size() != 0 ) {
           
           // for each entry in xw:
-            for (int m = 0; m < xw.size(); m++) {
+            for (size_t m = 0; m < xw.size(); m++) {
               
               i_negative.clear();
               i_positive.clear();
@@ -1255,7 +1253,7 @@ NumericVector similaritySimpleCpp(
               a_positive.clear();
               
               // loop back over all events until i
-              for (int n = 0; n < i; n++){
+              for (size_t n = 0; n < i; n++){
                 if ( senderTargetSim == "sender" ){
                   if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
                     i_positive.push_back(time[n]);
@@ -1395,7 +1393,7 @@ NumericVector similarityComplexCpp(
   std::vector<double> i_sendertarget;
   std::vector<double> a_sendertarget;
   double totalNumber;
-  double timePLast;
+  double timePLast = 0.0;
   int counter;
   double totalSim;
   double weightSim;
@@ -1407,7 +1405,7 @@ NumericVector similarityComplexCpp(
   
   
   //for each event (i-loop open)
-  for ( int i = 0; i < sender.size(); i++){
+  for ( size_t i = 0; i < sender.size(); i++){
     
     v.clear();
     w.clear();
@@ -1425,7 +1423,7 @@ NumericVector similarityComplexCpp(
     
     
     // loop back and find actors who said p and concepts that a said
-    for (int j = 0; j < i; j++) {
+    for (size_t j = 0; j < i; j++) {
       if ( senderTargetSim == "sender"){
         if ( matchNomatchSim == "match" ){
           if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute && eventTypeVar[j] == eventTypeVar[i]){
@@ -1460,20 +1458,20 @@ NumericVector similarityComplexCpp(
     counter = 0;
     
     // for each entry in v
-    for (int k = 0; k < v.size(); k++){
+    for (size_t k = 0; k < v.size(); k++){
       
       x.clear();
       xw.clear();
       
       if ( senderTargetSim == "sender" ){
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (sender[l] == v[k] && time[l] != time[i] && target[l] != target[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(target[l]);
           }
         }//closes l-loop
       }else{
-        for (int l = 0; l < i; l++) {
+        for (size_t l = 0; l < i; l++) {
           // if the event has concept k in v
           if (target[l] == v[k] && time[l] != time[i] && sender[l] != sender[i] && eventAttributeVar[l] == eventAttribute)  {      
             x.push_back(sender[l]);
@@ -1500,7 +1498,7 @@ NumericVector similarityComplexCpp(
         if (xw.size() != 0 ) {
           
           // for each entry in xw:
-            for (int m = 0; m < xw.size(); m++) {
+            for (size_t m = 0; m < xw.size(); m++) {
               
               i_negative.clear();
               i_positive.clear();
@@ -1510,7 +1508,7 @@ NumericVector similarityComplexCpp(
               a_sendertarget.clear();
               
               // loop back over all events until i
-              for (int n = 0; n < i; n++){
+              for (size_t n = 0; n < i; n++){
                 if ( senderTargetSim == "sender" ){
                   if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
                     i_positive.push_back(time[n]);
@@ -1549,28 +1547,28 @@ NumericVector similarityComplexCpp(
         
         //how large are the respextive vectors with the matches in them?
         if (a_positive.size() >= i_positive.size() && i_positive.size() != 0 ) {
-          for (int p = 0; p < i_positive.size(); p++){
+          for (size_t p = 0; p < i_positive.size(); p++){
             couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2)/halflifeTimeDifference));
             sumCouplePositive = sumCouplePositive + couple;
             couple = 0;
           }
         }
         if (a_negative.size() >= i_negative.size() && i_negative.size() != 0) {
-          for (int p = 0; p < i_negative.size(); p++){
+          for (size_t p = 0; p < i_negative.size(); p++){
             couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2)/halflifeTimeDifference));
             sumCoupleNegative = sumCoupleNegative + couple;
             couple = 0;
           }
         }
         if (i_positive.size() > a_positive.size() && a_positive.size() != 0) {
-          for (int p = 0; p < a_positive.size(); p++){
+          for (size_t p = 0; p < a_positive.size(); p++){
             couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2)/halflifeTimeDifference));
             sumCouplePositive = sumCouplePositive + couple;
             couple = 0;
           }
         }
         if (i_negative.size() > a_negative.size() && a_negative.size() != 0) {
-          for (int p = 0; p < a_negative.size(); p++){
+          for (size_t p = 0; p < a_negative.size(); p++){
             couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2)/halflifeTimeDifference));
             sumCoupleNegative = sumCoupleNegative + couple;
             couple = 0;
@@ -1583,12 +1581,12 @@ NumericVector similarityComplexCpp(
              if (xw.size() != 0 ) {
                
                // for each entry in xw:
-                 for (int m = 0; m < xw.size(); m++) {
+                 for (size_t m = 0; m < xw.size(); m++) {
                    i_sendertarget.clear();
                    a_sendertarget.clear();
                    
                    // loop back over all events until i
-                   for (int n = 0; n < i; n++){
+                   for (size_t n = 0; n < i; n++){
                      if ( senderTargetSim == "sender" ){
                        if (sender[n] == v[k] && target[n] == xw[m] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
                          i_sendertarget.push_back(time[n]);
@@ -1612,14 +1610,14 @@ NumericVector similarityComplexCpp(
              
              //how large are the respextive vectors with the matches in them?
              if (a_sendertarget.size() >= i_sendertarget.size() && i_sendertarget.size() != 0) {
-               for (int p = 0; p < i_negative.size(); p++){
+               for (size_t p = 0; p < i_negative.size(); p++){
                  couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2)/halflifeTimeDifference));
                  sumCoupleNoMatch = sumCoupleNoMatch + couple;
                  couple = 0;
                }
              }
              if (i_sendertarget.size() > a_sendertarget.size() && a_sendertarget.size() != 0) {
-               for (int p = 0; p < a_positive.size(); p++){
+               for (size_t p = 0; p < a_positive.size(); p++){
                  couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2)/halflifeTimeDifference));
                  sumCoupleNoMatch = sumCoupleNoMatch + couple;
                  couple = 0;
@@ -1705,7 +1703,7 @@ NumericVector reciprocityCpp(
   NumericVector result(sender.size());
   
   // for-loop i: for each event, do:
-  for ( int i = 0; i < sender.size(); i++){
+  for ( size_t i = 0; i < sender.size(); i++){
       
       // reset all the variables
       double reciprocity = 0;
@@ -1714,7 +1712,7 @@ NumericVector reciprocityCpp(
       double resulttemp = 0;
       
       // for-loop w: go back over all events and filter them
-      for ( int w = 0; w < i; w++ ){
+      for ( size_t w = 0; w < i; w++ ){
         
         // sender-target reciprocity only
         if ( reciprocitytype == "s-t-only" ){
@@ -1955,22 +1953,22 @@ NumericVector triadCpp(
         v.erase( unique( v.begin(), v.end() ), v.end() );
         
         // for each entry in v
-        for (int j = 0; j < v.size(); j++) {
+        for (size_t j = 0; j < v.size(); j++) {
           totalweighta = 0;
           totalweightb = 0;
           for ( int z = 0; z < i-1; z++ ) {   
             weighta = 0;
             weightb = 0;
             //caluculate weighta
-            if ( (sender[z] == sender[i] && target[z] == v[j]) || 
-            (target[z] == sender[i] && sender[z] == v[j]) && typevar[z] == typeA &&
+            if ( ( (sender[z] == sender[i] && target[z] == v[j]) || 
+            (target[z] == sender[i] && sender[z] == v[j]) ) && typevar[z] == typeA &&
             attributevarAI[z] == attrAI && time[z] != time[i] ){
               weighta = std::abs(weightvar[z]) * exp( - ( time[i] - time[z] ) * xlog) * xlog;
               totalweighta = totalweighta + weighta;   
             }
             //calculate weightb
-            if ( (sender[z] == target[i] && target[z] == v[j]) || 
-            (target[z] == target[i] && sender[z] == v[j]) && typevar[z] == typeB &&
+            if ( ( (sender[z] == target[i] && target[z] == v[j]) || 
+            (target[z] == target[i] && sender[z] == v[j]) ) && typevar[z] == typeB &&
             attributevarBI[z] == attrBI && time[z] != time[i] ){
               weightb = std::abs(weightvar[z]) * exp( - ( time[i] - time[z] ) * xlog) * xlog;
               totalweightb = totalweightb + weightb;   

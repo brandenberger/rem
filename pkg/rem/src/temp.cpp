@@ -40,10 +40,7 @@ NumericVector absoluteDiffAverageWeightEventAttributeCpp(
     return Rcpp::wrap(result);
 }
 
-//####################################################################
-// [[Rcpp::export]]
 
-  
 
 
 

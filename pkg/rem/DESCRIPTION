@@ -1,11 +1,13 @@
 Package: rem
 Type: Package
 Title: Relational Event Models (REM)
-Version: 1.0
-Date: 2015-08-17
-Author: Who wrote it
-Maintainer: Who to complain to <yourfault@somewhere.net>
-Description: Creating endogenous statistics and estimating Relational Event Models (REM).
-License: What license is it under?
-LinkingTo: Rcpp, flexsurv
-Suggests: xergm, texreg, statnet
+Version: 1.1.0
+Date: 2015-12-22
+Author: Laurence Brandenberger
+Maintainer: Laurence Brandenberger <laurence.brandenberger@eawag.ch>
+Description: Relational Event Models (REM).
+License: GPL (>= 2)
+Depends: R (>= 2.14.0)
+Imports: Rcpp, flexsurv, survival
+LinkingTo: Rcpp
+Suggests: xergm, texreg, statnet, ggplot2

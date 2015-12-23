@@ -1,0 +1,158 @@
+\name{fourCycleStat}
+\alias{fourCycleStat}
+\alias{fourCycle}
+\title{Calculate four cycle statistics}
+%
+\description{Calculate the endogenous network statistic \code{fourCycle} that 
+measures the tendency for events to close four cycles in two-mode event sequences.}
+\usage{
+fourCycleStat(data, time, sender, target, halflife, 
+    weight = NULL, 
+    eventtypevar = NULL, 
+    eventtypevalue = 'standard', 
+    eventattributevar = NULL, 
+    eventattributeAB = NULL, eventattributeAJ = NULL, 
+    eventattributeIB = NULL, eventattributeIJ = NULL,
+    variablename = 'fourCycle',
+    returnData = FALSE,
+    showprogressbar = FALSE)
+}
+\arguments{
+\item{data}{ A data frame containing all the variables.}
+\item{time}{ Numeric variable that represents the event sequence. The variable
+has to be sorted in ascending order.}
+\item{sender}{ A string (or factor or numeric) variable that represents the sender
+of the event.}
+\item{target}{ A string (or factor or numeric) variable that represents the target
+of the event.}
+\item{halflife}{ A numeric value that is used in the decay function.
+The vector of past events is weighted by an exponential decay function using the
+specified halflife. The halflife parameter determins after how long a period the
+event weigth should be halved. E.g. if \code{halflife = 5}, the weigth of an
+event that occured 5 units in the past is halved. Smaller halflife values give
+more importance to more recent events, while larger halflife values should be 
+used if time does not affect the sequence of events that much.}
+\item{weight}{ An optional numeric variable that represents the weigth of each
+event. If \code{weight = NULL} each event is given an event weigth of \code{1}.
+}
+\item{eventtypevar}{ An optional variable that represents the type of the event.
+Use \code{eventtypevalue} to specify how the \code{eventtypevar} should be used 
+to filter past events.
+}
+\item{eventtypevalue}{ An optional value (or set of values) used to specify how paste events should be filtered depending on their type. \code{'standard'}, \code{'positive'} or \code{'negative'} may be used. Default set to \code{'standard'}. \code{'standard'} referrs to closing four cylces where the type of the events is irrelevant. \code{'positive'} closing four cycles can be classified as reciprocity via the second mode. It indicates whether senders have a tendency to reciprocate or show support by engaging in targets that close a four cycle between two senders. \code{'negative'} closing four cycles represent opposition between two senders, where the current event is more likely if the two senders have opposed each other in the past. Support or opposition is represented by the \code{eventtypevar} value for each event.}
+\item{eventattributevar}{ An optinoal variable that represents an attribute of the event. It can be a sender attribute, a target attribute, time or dyad attribute.
+Use \code{eventattributeAB}, \code{eventattributeAJ}, \code{eventattributeIB} or
+\code{eventattributeIJ} to specify how the \code{eventattributevar} should be used.}
+\item{eventattributeAB}{ An optional value used to specify how 
+paste events should be filtered depending on their attribute. Each distinct edge that form a four cycle can be filtered. \code{eventattributeAB} refers to the current event. \code{eventattributeAJ} refers to the event involving the current sender and target \code{j} that has been used by the current as well as the second actor in the past. \code{eventattributeIB} refers to the event involving the second sender and the current target. \code{eventattributeIJ} filters events that involve the second sender and the second target. See the four cycle formula in the \code{details} section for more information.}
+\item{eventattributeAJ}{ see \code{eventattributeAB}.}
+\item{eventattributeIB}{see \code{eventattributeAB}.}
+\item{eventattributeIJ}{see \code{eventattributeAB}.}
+\item{variablename}{ An optional value (or values) with the name the four cycle statistic variable should be given. To be used if \code{returnData = TRUE}.}
+\item{returnData}{ \code{TRUE/FALSE}. Set to \code{FALSE} by default. The new  variable(s) are bound directly to the \code{data.frame} provided and the data frame is returned in full.}
+\item{showprogressbar}{\code{TRUE/FALSE}. To be implemented.}
+}
+\details{
+The \code{fourCycleStat()}-function calculates an endogenous statistic that measures whether events have a tendency to form four cycles.
+
+The effect is calculated as follows:
+
+\deqn{G_t = G_t(E) = (A, B, w_t), }{G_t = G_t(E) = (A, B, w_t),}
+
+\eqn{G_t} represents the network of past events and includes all events \eqn{E}. These events consist
+each of  a sender \eqn{a \in A}{a in A} and a target \eqn{b \in B}{b in B} and a weight function \eqn{w_t}:
+
+\deqn{  w_t(i, j) = \sum_{e:a = i, b = j} | w_e | \cdot e^{-(t-t_e)\cdot\frac{ln(2)}{T_{1/2}}} \cdot \frac{ln(2)}{T_{1/2}}, }{ w_t(i, j) = \sum_{e:a = i, b = j} | w_e | * exp^{-(t-t_e)* (ln(2)/T_{1/2})} * (ln(2)/T_{1/2}),}
+
+where \eqn{w_e} is the event weight (usually a constant set to 1 for each event), \eqn{t} is the current event time, \eqn{t_e} is the past event time and \eqn{T_{1/2}} is a halflife parameter.
+
+For the four-cylce effect, the past events \eqn{G_t} are filtered to include only events
+where the current event closes an open four-cycle in the past.
+
+\deqn{fourCycle(G_t , a , b) = \sqrt[3]{\sum_{i \in A \& j \in B} w_t(a, j) \cdot w_t(i, b) \cdot w_t(i, j)}}{fourCycle(G_t , a , b) = (\sum_{i in A and j in B} w_t(a, j) * w_t(i, b) * w_t(i, j))^(1/3)}
+
+An exponential decay function is used to model the effect of time on the endogenous statistics. The further apart the past event is from the present event, the less weight is given to this event. The halflife parameter in the \code{fourCycleStat()}-function determins at which rate the weights of past events should be reduced. Therefore, if the one (or more) of the three events in the four cycle have ocurred further in the past, less weight is given to this four cycle because it becomes less likely that the two senders reacted to each other in the way the four cycle assumes.
+
+The \code{eventtypevar}- and \code{eventattributevar}-options help filter the past events more specifically. How they are filtered depends on the \code{eventtypevalue}- and \code{eventattributevalue}-option.
+}
+% \value{
+% 
+% }
+% \references{
+% 
+% }
+% \note{
+% 
+% }
+\author{
+Laurence Brandenberger \email{laurence.brandenberger@eawag.ch}
+}
+\seealso{
+\link{rem-package}
+}
+\examples{
+# create some data two-mode network event sequence data with
+# a 'sender', 'target' and a 'time'-variable
+sender <- c('A', 'B', 'A', 'C', 'A', 'D', 'F', 'G', 'A', 'B',
+            'B', 'C', 'D', 'E', 'F', 'B', 'C', 'D', 'E', 'C', 
+            'A', 'F', 'E', 'B', 'C', 'E', 'D', 'G', 'A', 'G', 
+            'F', 'B', 'C')
+target <- c('T1', 'T2', 'T3', 'T2', 'T1', 'T4', 'T6', 'T2', 
+            'T4', 'T5', 'T5', 'T5', 'T1', 'T6', 'T7', 'T2', 
+            'T3', 'T1', 'T1', 'T4', 'T5', 'T6', 'T8', 'T2',
+            'T7', 'T1', 'T6', 'T7', 'T3', 'T4', 'T7', 'T8', 'T2')
+time <- c('03.01.15', '04.01.15', '10.02.15', '28.02.15', '01.03.15', 
+          '07.03.15', '07.03.15', '12.03.15', '04.04.15', '28.04.15',
+          '06.05.15', '11.05.15', '13.05.15', '17.05.15', '22.05.15', 
+          '09.08.15', '09.08.15', '14.08.15', '16.08.15', '29.08.15',
+          '05.09.15', '25.09.15', '02.10.15', '03.10.15', '11.10.15', 
+          '18.10.15', '20.10.15', '28.10.15', '04.11.15', '09.11.15', 
+          '10.12.15', '11.12.15', '12.12.15')
+type <- sample(c('con', 'pro'), 33, replace = TRUE)
+important <- sample(c('important', 'not important'), 33,
+                    replace = TRUE)
+
+# combine them into a data.frame
+dt <- data.frame(sender, target, time, type, important)
+
+# create event sequence and order the data
+dt <- eventSequence(datevar = dt$time, dateformat = '\%d.\%m.\%y', 
+                    data = dt, type = 'continuous', 
+                    byTime = 'daily', returnData = TRUE,
+                    sortData = TRUE)
+
+# calculate closing four-cycle statistic
+dt$fourCycle <- fourCycleStat(data = dt, 
+                              time = dt$event.seq.cont, 
+                              sender = dt$sender, 
+                              target = dt$target, 
+                              halflife = 20)
+
+# plot closing four-cycles over time:
+library("ggplot2")
+ggplot(dt, aes ( event.seq.cont, fourCycle) ) +
+  geom_point()+ geom_smooth() 
+
+# calculate positive closing four-cycles: general support
+dt$fourCycle.pos <- fourCycleStat(data = dt, 
+                                  time = dt$event.seq.cont, 
+                                  sender = dt$sender, 
+                                  target = dt$target, 
+                                  halflife = 20, 
+                                  eventtypevar = dt$type, 
+                                  eventtypevalue = 'positive')
+
+# calculate negative closing four-cycles: general opposition
+dt$fourCycle.neg <- fourCycleStat(data = dt, 
+                                  time = dt$event.seq.cont, 
+                                  sender = dt$sender, 
+                                  target = dt$target, 
+                                  halflife = 20, 
+                                  eventtypevar = dt$type, 
+                                  eventtypevalue = 'negative')
+}
+%\keyword{key}
+
+
+
+

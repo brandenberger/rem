@@ -1,4 +1,15 @@
 useDynLib(rem)
-import("methods")
-# export all functions - 
-exportPattern("^[^\\.]")
+import("flexsurv")
+import("survival")
+importFrom("Rcpp", evalCpp)
+importFrom("stats", "as.formula")
+# export all functions -> exportPattern("^[[:alpha:]]+") -> or: exportPattern("^[^\\.]")
+# since there are cpp-functions included, they would be exported as well, therefore, only the R-functions are exported
+export("degreeStat")
+export("eventSequence")
+export("fourCycleStat")
+export("triadStat")
+export("inertiaStat")
+export("reciprocityStat")
+export("remRate")
+export("similarityStat")

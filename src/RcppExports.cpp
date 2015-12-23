@@ -48,6 +48,28 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// degreeOneModeCpp
+NumericVector degreeOneModeCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> degreevar, std::vector<std::string> degreeothermodevar, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string degreetype);
+RcppExport SEXP rem_degreeOneModeCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP degreevarSEXP, SEXP degreeothermodevarSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP degreetypeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type degreevar(degreevarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type degreeothermodevar(degreeothermodevarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
+    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
+    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< std::string >::type degreetype(degreetypeSEXP);
+    __result = Rcpp::wrap(degreeOneModeCpp(time, weightvar, degreevar, degreeothermodevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype));
+    return __result;
+END_RCPP
+}
 // fourCycleCpp
 NumericVector fourCycleCpp(std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, NumericVector time, NumericVector weightvar, double xlog, std::vector<std::string> attrvarNow, std::string attrNow, std::vector<std::string> attrvarAaj, std::string attrAaj, std::vector<std::string> attrvarBib, std::string attrBib, std::vector<std::string> attrvarCij, std::string attrCij, std::string fourCycleType);
 RcppExport SEXP rem_fourCycleCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP xlogSEXP, SEXP attrvarNowSEXP, SEXP attrNowSEXP, SEXP attrvarAajSEXP, SEXP attrAajSEXP, SEXP attrvarBibSEXP, SEXP attrBibSEXP, SEXP attrvarCijSEXP, SEXP attrCijSEXP, SEXP fourCycleTypeSEXP) {
@@ -128,6 +150,69 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
     Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
     __result = Rcpp::wrap(similarityComplexCpp(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim));
+    return __result;
+END_RCPP
+}
+// reciprocityCpp
+NumericVector reciprocityCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string reciprocitytype);
+RcppExport SEXP rem_reciprocityCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP reciprocitytypeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
+    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
+    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< std::string >::type reciprocitytype(reciprocitytypeSEXP);
+    __result = Rcpp::wrap(reciprocityCpp(time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype));
+    return __result;
+END_RCPP
+}
+// triadCpp
+NumericVector triadCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> typevar, std::string typeA, std::string typeB, std::vector<std::string> attributevarAB, std::string attrAB, std::vector<std::string> attributevarAI, std::string attrAI, std::vector<std::string> attributevarBI, std::string attrBI, double xlog);
+RcppExport SEXP rem_triadCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP typevarSEXP, SEXP typeASEXP, SEXP typeBSEXP, SEXP attributevarABSEXP, SEXP attrABSEXP, SEXP attributevarAISEXP, SEXP attrAISEXP, SEXP attributevarBISEXP, SEXP attrBISEXP, SEXP xlogSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type typeA(typeASEXP);
+    Rcpp::traits::input_parameter< std::string >::type typeB(typeBSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attributevarAB(attributevarABSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrAB(attrABSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attributevarAI(attributevarAISEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrAI(attrAISEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attributevarBI(attributevarBISEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrBI(attrBISEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    __result = Rcpp::wrap(triadCpp(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog));
+    return __result;
+END_RCPP
+}
+// absoluteDiffAverageWeightEventAttributeCpp
+NumericVector absoluteDiffAverageWeightEventAttributeCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> eventattributevar, std::string eventattribute, double xlog);
+RcppExport SEXP rem_absoluteDiffAverageWeightEventAttributeCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP eventattributevarSEXP, SEXP eventattributeSEXP, SEXP xlogSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventattributevar(eventattributevarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type eventattribute(eventattributeSEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    __result = Rcpp::wrap(absoluteDiffAverageWeightEventAttributeCpp(sender, target, time, weightvar, eventattributevar, eventattribute, xlog));
     return __result;
 END_RCPP
 }

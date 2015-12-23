@@ -18,9 +18,10 @@
 ##  Inertia
 ################################################################################
 
-get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL, eventtypevar = NULL, eventtypevalue = "valuematch", 
-                             eventattributevar = NULL, eventattributevalue = "valuematch", variablename = "inertia", returnData = TRUE, 
-                             showprogressbar = FALSE, ...){
+inertiaStat <- function(data, time, sender, target, halflife, 
+    weight = NULL, eventtypevar = NULL, eventtypevalue = "valuematch",
+	eventattributevar = NULL, eventattributevalue = "valuematch", 
+	variablename = "inertia", returnData = FALSE, showprogressbar = FALSE){
   
   ####### check inputs
   ## check if sender and target inputs are available
@@ -35,6 +36,11 @@ get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL
   }else{
     target <- as.character(target)
   }
+
+  ## check if all variables have the same length.
+  if (length(sender) != length(target)){
+	stop("'sender' and 'target' are not of the same length.")
+  }
   
   ## check if event.sequence is well defined (numeric and ever-increasing)
   if ( is.null(time) ) {
@@ -44,6 +50,11 @@ get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL
     if ( is.unsorted(time) ) {
       stop("'", time, "' is not sorted. Sort data frame according to the event sequence.")
     }
+  }
+  
+  ## check if time has the requested length
+  if (length(sender) != length(time)){
+	stop("'sender' and 'time' are not of the same length.")
   }
   
   ## check if weight-var is defined (if not -> create it)
@@ -56,6 +67,11 @@ get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL
   
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# check length
+	if (length(sender) != length(eventtypevar)){
+		stop("'eventtypevar' and 'sender' are not of the same length.")
+	}
+	# transform
     eventtypevar <- as.character(eventtypevar)
     if ( is.null(eventtypevalue) ){
       stop("No 'eventtypevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -81,6 +97,11 @@ get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# check length
+	if (length(sender) != length(eventattributevar)){
+		stop("'eventattributevar' and 'sender' are not of the same length.")
+	}
+	# transform
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributevalue) ){
       stop("No 'eventattributevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -799,13 +820,13 @@ get.inertia.stat <- function(data, time, sender, target, halflife, weight = NULL
 ##	Degree calculation
 ################################################################################
 
-get.degree.stat <- function(data, time, degreevar, halflife, weight = NULL,
+degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                             eventtypevar = NULL, eventtypevalue = "valuematch", 
                             eventattributevar = NULL, 
                             eventattributevalue = "valuematch", 
                             degree.on.other.var = NULL,
-                            variablename = "degree", returnData = TRUE, 
-                            showprogressbar = FALSE, ...){
+                            variablename = "degree", returnData = FALSE, 
+                            showprogressbar = FALSE){
   
   ####### check inputs
   ## check if degreevar input is available
@@ -824,6 +845,11 @@ get.degree.stat <- function(data, time, degreevar, halflife, weight = NULL,
       stop("'", time, "' is not sorted. Sort data frame according to the event sequence.")
     }
   }
+
+  ## check if degree and time are of same length
+  if (length(degreevar) != length(time)){
+		stop("'degreevar' and 'time' are not of the same length.")
+  }
   
   ## check if weight-var is defined (if not -> create it)
   if ( is.null(weight) ) {
@@ -832,9 +858,23 @@ get.degree.stat <- function(data, time, degreevar, halflife, weight = NULL,
   if ( !is.numeric(weight) ) {
     stop("'", as.name(weight), "' variable is not numeric.") #TODO: deparse(substitute(eventattributevar)) ?
   }
+
+  ## check if degree.on.other.var and degreevar are of same length
+  if ( !is.null(degree.on.other.var)){
+	if ( length(degreevar) != length(degree.on.other.var) ){
+		stop("'degree.on.other.var' and 'degreevar' are not of same length.")
+	}
+	degree.on.other.var <- as.character(degree.on.other.var)
+  }
   
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# check if degreevar and eventtypevar are of same length
+	if (length(degreevar) != length(eventtypevar)){
+		stop("'eventtypevar' and 'degreevar' are not of the same length.")
+	}
+	
+	# transform eventtypevar
     eventtypevar <- as.character(eventtypevar)
     if ( is.null(eventtypevalue) ){
       stop("No 'eventtypevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -860,6 +900,11 @@ get.degree.stat <- function(data, time, degreevar, halflife, weight = NULL,
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# check if degreevar and eventattributevar are of same length
+	if (length(degreevar) != length(eventattributevar)){
+		stop("'eventtypevar' and 'eventattributevar' are not of the same length.")
+	}
+	# transform eventattributevar
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributevalue) ){
       stop("No 'eventattributevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -1772,7 +1817,7 @@ if ( is.null(degree.on.other.var) ){
           }
         }#closes j-loop
         ## calculate degree for the attribute-values where i and j are the same (both i used)
-        temp <- degreeOneMode(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i , placeholder, "1", "1", xlog, "d-attributemix")  	
+        temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i , placeholder, "1", "1", xlog, "d-attributemix")  	
         ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
         data.short <- cbind(data.short, temp)
         names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
@@ -2258,10 +2303,11 @@ if ( is.null(degree.on.other.var) ){
 ##	FourCycle calculation
 ################################################################################
 
-get.fourCycle.stat <- function(data, time, sender, target, halflife, weight = NULL, eventtypevar = NULL, eventtypevalue = "standard", 
-                               eventattributevar = NULL, eventattributeAB = NULL, eventattributeAJ = NULL, 
-                               eventattributeIB = NULL, eventattributeIJ = NULL, variablename = "fourCycle", returnData = TRUE, 
-                               showprogressbar = FALSE){
+fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
+	 eventtypevar = NULL, eventtypevalue = 'standard', eventattributevar = NULL, 
+	eventattributeAB = NULL, eventattributeAJ = NULL, eventattributeIB = NULL,
+	 eventattributeIJ = NULL, variablename = 'fourCycle', returnData = FALSE, 
+	 showprogressbar = FALSE){
   
   ####### check inputs
   ## check if sender input is available
@@ -2287,6 +2333,14 @@ get.fourCycle.stat <- function(data, time, sender, target, halflife, weight = NU
       stop("'", time, "' is not sorted. Sort data frame according to the event sequence.")
     }
   }
+
+  ## check if all variables are of same length
+  if( length(sender) != length(target) ){
+	stop("'sender' and 'target' are not of same length.")
+  }
+  if ( length(sender) != length(time) ){
+	stop("'sender' and 'time' are not of same length.")
+  }
   
   ## check if weight-var is defined (if not -> create it)
   if ( is.null(weight) ) {
@@ -2298,6 +2352,11 @@ get.fourCycle.stat <- function(data, time, sender, target, halflife, weight = NU
   
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# length test
+	if ( length(sender) != length(eventtypevar) ){
+     stop("'sender' and 'eventtypevar' are not of same length.")
+    }
+	# transform variable
     eventtypevar <- as.character(eventtypevar)
     if ( length(unique(eventtypevar)) != 2 ){ 
       stop("'eventtypevar' is not a dummy variable.")
@@ -2314,6 +2373,11 @@ get.fourCycle.stat <- function(data, time, sender, target, halflife, weight = NU
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# length test
+	if ( length(sender) != length(eventattributevar) ){
+     stop("'sender' and 'eventattributevar' are not of same length.")
+    }
+	# transform variable
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ) ){
       stop("No 'eventattribute__' provided. Provide a string value by which the events are filtered.", )
@@ -2820,14 +2884,16 @@ get.fourCycle.stat <- function(data, time, sender, target, halflife, weight = NU
 ##	Similarity calculation
 ################################################################################
 
-get.similarity.stat <- function(data, time, sender, target, 
+similarityStat <- function(data, time, sender, target, 
                                 senderOrTarget = "sender",
                                 whichSimilarity = NULL, 
                                 halflife.last.event = NULL, 
                                 halflife.time.between.events = NULL,
                                 eventtypevar = NULL, 
-                                eventattributevar = NULL, eventattributevalue = NULL,
-                                variablename = "similarity", returnData = TRUE, 
+                                eventattributevar = NULL, 
+								eventattributevalue = NULL,
+                                variablename = "similarity", 
+								returnData = FALSE, 
                                 showprogressbar = FALSE){
   
   ####### check inputs
@@ -2854,8 +2920,16 @@ get.similarity.stat <- function(data, time, sender, target,
       stop("'", time, "' is not sorted. Sort data frame according to 
            the event sequence.")
     }
-    }
+  }
   
+  ## check if sender and target and time are of same length
+  if ( length(sender) != length(target) ){
+	stop("'sender' and 'target' are not of same length.")
+  }
+  if ( length(time) != length(sender) ){
+	stop("'sender' and 'time' are not of same length.")
+  }
+
   ## check if senderOrTarget is specified
   if ( (senderOrTarget == "sender" | senderOrTarget == "target") == FALSE ){
     stop("'senderOrTarget' not correctly specified. Choose either 'sender' 
@@ -2865,10 +2939,10 @@ get.similarity.stat <- function(data, time, sender, target,
   ## check if whichSimilarity is specified
   if ( is.null(whichSimilarity) == FALSE ){
     if ( (whichSimilarity == "total" | whichSimilarity == "average" ) == FALSE ){
-      stop("'whichSimilarity' not correctly specified. Choose either 'NULL', 
-           'total' or 'average' for the respective similarity measure.")
+      stop("'whichSimilarity' not correctly specified. Choose either 'total' 
+           or 'average' for the respective similarity measure or set it to 'NULL'.")
     }
-    }
+  }
   
   ## average/total vs. with halflife
   if ( is.null(whichSimilarity)  & is.null(halflife.last.event) ){
@@ -2886,14 +2960,24 @@ get.similarity.stat <- function(data, time, sender, target,
   
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# check if sender and eventattributevar are of same length
+	if ( length(eventtypevar) != length(sender) ){
+	  stop("'sender' and 'eventtypevar' are not of same length.")
+    }
+	# transform eventtypevar
     eventtypevar <- as.character(eventtypevar)
     if ( length(unique(eventtypevar)) != 2 ){ 
-      stop("'eventtypevar' is not a dummy variable.")
+      stop("'eventtypevar' is not a dummy variable. Other variable types are not yet supported")
     }
   }
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# check if sender and eventattributevar are of same length
+	if ( length(eventattributevar) != length(sender) ){
+	  stop("'sender' and 'eventattributevar' are not of same length.")
+    }
+  	# transform eventattributevar
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributevalue) ){
       stop("No 'eventattributevalue' provided. Provide a string value by 
@@ -2907,7 +2991,7 @@ get.similarity.stat <- function(data, time, sender, target,
              deparse(substitute(eventattributevar)) , "'.") 
       }
     }
-    }
+  }
   
   ## check if variablename makes sense (no " " etc.)
   variablename <- gsub(" ", "", variablename, fixed = TRUE)
@@ -2945,7 +3029,7 @@ get.similarity.stat <- function(data, time, sender, target,
             return(result)
           }		
         }
-        if ( is.null(eventtypevar) & is.null(eventattributevar)==FALSE ){
+        if ( is.null(eventtypevar) & is.null(eventattributevar) == FALSE ){
           ## (2a) sender, total, filter
           result <- similarityTotalAverageCpp(sender, target, time, 
                                               eventattributevar, 
@@ -2963,7 +3047,7 @@ get.similarity.stat <- function(data, time, sender, target,
           }
           
         }
-        if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar)==FALSE ){
+        if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
           ## (3a) sender, total, match, filter
           result <- similarityTotalAverageCpp(sender, target, time, 
                                               eventattributevar, 
@@ -3015,7 +3099,7 @@ get.similarity.stat <- function(data, time, sender, target,
             return(result)
           }		
         }
-        if ( is.null(eventtypevar) & is.null(eventattributevar)==FALSE ){
+        if ( is.null(eventtypevar) & is.null(eventattributevar) == FALSE ){
           ## (2b) sender, average, filter
           result <- similarityTotalAverageCpp(sender, target, time, 
                                               eventattributevar, 
@@ -3033,7 +3117,7 @@ get.similarity.stat <- function(data, time, sender, target,
           }
           
         }
-        if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar)==FALSE ){
+        if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
           ## (3b) sender, average, match, filter
           result <- similarityTotalAverageCpp(sender, target, time, 
                                               eventattributevar, 
@@ -3071,7 +3155,7 @@ get.similarity.stat <- function(data, time, sender, target,
     }#closes is.null(whichSimilarity) == FALSE 
     ##########
     # with 1 hallife parameter set
-    if ( is.null(whichSimilarity) & is.null(halflife.last.event)==FALSE & 
+    if ( is.null(whichSimilarity) & is.null(halflife.last.event) == FALSE & 
            is.null(halflife.time.between.events)){
       if ( is.null(eventtypevar) & is.null(eventattributevar)){
         ## (1c) sender, 1time				
@@ -3088,7 +3172,7 @@ get.similarity.stat <- function(data, time, sender, target,
           return(result)
         }		
       }
-      if ( is.null(eventtypevar) & is.null(eventattributevar)==FALSE ){
+      if ( is.null(eventtypevar) & is.null(eventattributevar) == FALSE ){
         ## (2c) sender, 1time, filter
         result <- similaritySimpleCpp(sender, target, time, xlog.last.event, 
                                       eventattributevar, eventattributevalue, 
@@ -3105,7 +3189,7 @@ get.similarity.stat <- function(data, time, sender, target,
         }
         
       }
-      if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar)==FALSE ){
+      if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
         ## (3c) sender, 1time, match, filter
         result <- similaritySimpleCpp(sender, target, time, xlog.last.event, 
                                       eventattributevar, eventattributevalue, 
@@ -3141,8 +3225,8 @@ get.similarity.stat <- function(data, time, sender, target,
     }#closes if --1halflife parameter set--command
     
     ##########
-    if ( is.null(whichSimilarity) & is.null(halflife.last.event)==FALSE & 
-           is.null(halflife.time.between.events)==FALSE){
+    if ( is.null(whichSimilarity) & is.null(halflife.last.event) == FALSE & 
+           is.null(halflife.time.between.events) == FALSE){
       if ( is.null(eventtypevar) & is.null(eventattributevar)){
         ## (1d) sender, 2times				
         result <- similarityComplexCpp(sender, target, time, xlog.last.event, 
@@ -3160,7 +3244,7 @@ get.similarity.stat <- function(data, time, sender, target,
           return(result)
         }		
       }
-      if ( is.null(eventtypevar) & is.null(eventattributevar)==FALSE ){
+      if ( is.null(eventtypevar) & is.null(eventattributevar) == FALSE ){
         ## (2d) sender, 2times, filter
         result <- similarityComplexCpp(sender, target, time, xlog.last.event, 
                                        halflife.time.between.events, 
@@ -3178,7 +3262,7 @@ get.similarity.stat <- function(data, time, sender, target,
         }
         
       }
-      if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar)==FALSE ){
+      if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
         ## (3d) sender, 2times, match, filter
         result <- similarityComplexCpp(sender, target, time, xlog.last.event, 
                                        halflife.time.between.events, 
@@ -3217,6 +3301,7 @@ get.similarity.stat <- function(data, time, sender, target,
     
     # target similarity
   } else if ( senderOrTarget == "target"){
+	if ( is.null(whichSimilarity) == FALSE ){
     if ( whichSimilarity == "total"){
       ##########
       if ( is.null(eventtypevar) & is.null(eventattributevar)){
@@ -3319,8 +3404,7 @@ get.similarity.stat <- function(data, time, sender, target,
         }else{ 
           ## only return the 1 degree variable that was generated
           return(result)
-        }
-        
+        }    
       }
       if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar)==FALSE ){
         ## (3b) sender, average, match, filter
@@ -3356,7 +3440,8 @@ get.similarity.stat <- function(data, time, sender, target,
           return(result)
         }
       }
-    }#closes whichSimilarity == "average"		
+    }#closes whichSimilarity == "average"
+	}#closes is.null(whichSimilarity) == FALSE
     ##########
     # with 1 hallife parameter set
     if ( is.null(whichSimilarity) & is.null(halflife.last.event)==FALSE & 
@@ -3430,6 +3515,7 @@ get.similarity.stat <- function(data, time, sender, target,
     }#closes if --1halflife parameter set--command
     
     ##########
+	# with 2 halflife parameters set
     if ( is.null(whichSimilarity) & is.null(halflife.last.event)==FALSE & 
            is.null(halflife.time.between.events)==FALSE){
       if ( is.null(eventtypevar) & is.null(eventattributevar)){
@@ -3511,17 +3597,17 @@ get.similarity.stat <- function(data, time, sender, target,
 ##  Create event sequence
 ################################################################################
 
-create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
-                                  type = "continuous", byTime = "1 day",
-                                  excludeDate = NULL, excludeTypeOfDay = NULL,
-                                  excludeYear = NULL, excludeFrom = NULL, 
-                                  excludeTo = NULL, returnData = FALSE, 
-                                  sortData = TRUE, ...){
+eventSequence <- function(datevar, dateformat = NULL, data = NULL,
+                          type = "continuous", byTime = "daily",
+                          excludeDate = NULL, excludeTypeOfDay = NULL,
+                          excludeYear = NULL, excludeFrom = NULL, 
+                          excludeTo = NULL, returnData = FALSE, 
+                          sortData = FALSE){
   
   #### check if all the inputs are correct
   ## check if date and dateformat match => then create Date-object
   if (type == "continuous"){
-    date <- as.Date(datevar, format = dateformat)
+    date <- as.Date(as.character(datevar), format = dateformat)
     if (is.na(date[1])){
       stop("'dateformat' does not match structure of 'datevar'.")
     }
@@ -3568,12 +3654,21 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
             not sorted. Choose 'returnData = TRUE' and 'orderData = TRUE'
             to make sure your data set has not been tarnished.")
   }
+
+  ## check byTime
+  if (is.na(byTime)){
+	stop("'byTime' is not specified correctly. Use 'daily', 'monthly', 'yearly'.")
+  }
+  if (byTime == "daily" | byTime == "monthly" | byTime == "yearly"){
+  }else{
+	stop("'byTime' is not specified correctly. Use 'daily', 'monthly', 'yearly'.")
+  }
   
   #### create continuous event sequence
   if (type == "continuous"){   
     
-    ## create artificial sequence from start to end
-    sequence <- data.frame(seq(min(date), max(date), byTime))
+    ## create artificial sequence from start to end in days
+    sequence <- data.frame(seq(min(date), max(date), "1 day"))
     names(sequence) <- "date.sequence"
     
     ## erase whatever
@@ -3581,7 +3676,7 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
     if ( is.null(excludeDate) == FALSE){
       ## exlcude some of them
       for (i in excludeDate){
-        sequence <- subset(sequence, sequence$date.sequence != i)
+        sequence <- subset(sequence, sequence$date.sequence != as.Date(i, dateformat))
       }
     }
     
@@ -3613,7 +3708,17 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
     }
     
     ## give artificial sequence 1:length()
-    sequence$event.sequence <- 1:length(sequence$date.sequence)
+	if (byTime == "daily"){
+		sequence$event.sequence <- 1:length(sequence$date.sequence)
+	}
+	if (byTime == "monthly"){
+		sequence$months.year <- as.character(format(sequence$date.sequence, "%m%Y"))
+		sequence$event.sequence <- as.numeric(as.factor(sequence$months.year))
+	}
+	if (byTime == "yearly"){
+		sequence$year <- as.character(format(sequence$date.sequence, "%Y"))
+		sequence$event.sequence <- as.numeric(as.factor(sequence$year))
+	}
     
     ## match with datevar
     result <- sequence$event.sequence[match(date, sequence$date.sequence)]
@@ -3629,7 +3734,14 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
     }else{
       ## unsorted:
       data <- cbind(data, result)
-      names(data)[length(data)] <- "event.seq.cont"
+
+	  ## remove previous event-seq-variables
+	  if ( length(unique(grepl("event.seq.cont", names(data)))) == 2 ){
+	    data <- subset(data, select = -c('event.seq.cont'))
+	  }
+
+      ## 
+      names(data)[length(data)] <- 'event.seq.cont'
       if ( sortData == FALSE ){
         return(data)
       }else{ ## sorted:
@@ -3674,7 +3786,13 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
     }else{
       ## unsorted:
       data <- cbind(data, result)
-      names(data)[length(data)] <- "event.seq.ord"
+
+	  ## remove previous event-seq-variables
+	  if ( length(unique(grepl("event.seq.ord", names(data)))) == 2 ){
+	    data <- subset(data, select = -c('event.seq.ord'))
+	  }
+
+      names(data)[length(data)] <- 'event.seq.ord'
       if ( sortData == FALSE ){
         return(data)
       }else{ ## sorted:
@@ -3689,12 +3807,13 @@ create.event.sequence <- function(datevar, dateformat = NULL, data = NULL,
 ##	Reciprocity (one-mode statistic)
 ################################################################################
 
-get.reciprocity.stat <- function(data, time, sender, target, halflife, 
+reciprocityStat <- function(data, time, sender, target, halflife, 
                                  weight = NULL, eventtypevar = NULL, 
                                  eventtypevalue = "valuematch", 
                                  eventattributevar = NULL, 
                                  eventattributevalue = "valuematch", 
-                                 variablename = "reciprocity", returnData = TRUE, 
+                                 variablename = "reciprocity", 
+								 returnData = FALSE, 
                                  showprogressbar = FALSE){
   
   ####### check inputs
@@ -3709,6 +3828,14 @@ get.reciprocity.stat <- function(data, time, sender, target, halflife,
     stop("No 'target' argument was provided.")
   }else{
     target <- as.character(target)
+  }
+
+  ## check if sender, target and time are of same length
+  if ( length(sender) != length(target) ){
+	stop("'sender' and 'target' are not of equal length.")
+  }
+  if ( length(sender) != length(time) ){
+	stop("'sender' and 'time' are not of equal length.")
   }
   
   ## check if event.sequence is well defined (numeric and ever-increasing)
@@ -3731,6 +3858,11 @@ get.reciprocity.stat <- function(data, time, sender, target, halflife,
   
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# check if eventtypevar and sender are of equal length
+	if ( length(sender) != length(eventtypevar) ){
+	  stop("'sender' and 'eventtypevar' are not of equal length.")
+    }
+ 	# transform eventtypevar
     eventtypevar <- as.character(eventtypevar)
     if ( is.null(eventtypevalue) ){
       stop("No 'eventtypevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -3756,6 +3888,11 @@ get.reciprocity.stat <- function(data, time, sender, target, halflife,
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# check if eventtypevar and sender are of equal length
+	if ( length(sender) != length(eventattributevar) ){
+	  stop("'sender' and 'eventattributevar' are not of equal length.")
+    }
+    # transform eventattributevar
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributevalue) ){
       stop("No 'eventattributevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
@@ -4473,12 +4610,12 @@ get.reciprocity.stat <- function(data, time, sender, target, halflife,
 ##	Triads (one-mode statistic)
 ################################################################################
 
-get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
-                           eventtypevar = NULL, eventtypevalues = NULL, 
-                           eventattributevar = NULL, eventattributeAI = NULL,
-                           eventattributeBI = NULL, eventattributeAB = NULL,
-                           variablename = "triad", returnData = TRUE, 
-                           showprogressbar = FALSE){
+triadStat <- function(data, time, sender, target, halflife, weight = NULL,
+                      eventtypevar = NULL, eventtypevalues = NULL, 
+                      eventattributevar = NULL, eventattributeAI = NULL,
+                      eventattributeBI = NULL, eventattributeAB = NULL,
+                      variablename = "triad", returnData = FALSE, 
+                      showprogressbar = FALSE){
   
   ####### check inputs
   ## check if sender input is available
@@ -4505,6 +4642,14 @@ get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
            sequence.")
     }
   }
+
+  ## check if vaiables are of same length
+  if ( length(sender) != length(target) ){
+	stop("'sender' and 'target' are not of same length.")
+  }
+  if ( length(sender) != length(time) ){
+	stop("'sender' and 'time' are not of same length.")
+  }
   
   ## check if weight-var is defined (if not -> create it)
   if ( is.null(weight) ) {
@@ -4516,6 +4661,11 @@ get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
     
   ## check if event-type inputs are available and correctly specified
   if ( !is.null(eventtypevar) ) {
+	# check if variable is of same length as sender
+	if ( length(sender) != length(eventtypevar) ){
+	  stop("'sender' and 'eventtypevar' are not of same length.")
+    }
+	# transform variable
     eventtypevar <- as.character(eventtypevar)
     if ( length(unique(eventtypevar)) != 2 ){ 
       stop("'eventtypevar' is not a dummy variable.")
@@ -4530,11 +4680,11 @@ get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
            values indicate which value in the 'eventtypevar' relates to
            'friend' (or 'enemy') depending on the triad type.")
     }
-    if ( length(grep(eventtypevalue[1], eventtypevar)) == 0 ) {
+    if ( length(grep(eventtypevalues[1], eventtypevar)) == 0 ) {
       stop("First value '", eventattributeAB, "' is not an element of '", 
            deparse(substitute(eventattributevar)) , "'.") 
     }
-    if ( length(grep(eventtypevalue[2], eventtypevar)) == 0 ) {
+    if ( length(grep(eventtypevalues[2], eventtypevar)) == 0 ) {
       stop("Second value '", eventattributeAB, "' is not an element of '", 
            deparse(substitute(eventattributevar)) , "'.") 
     }
@@ -4542,6 +4692,11 @@ get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
   
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventattributevar) == FALSE ) {
+	# check length of variable
+	if ( length(sender) != length(eventattributevar) ){
+	  stop("'sender' and 'eventattributevar' are not of same length.")
+    }
+	# transform variable
     eventattributevar <- as.character(eventattributevar)
     if ( is.null(eventattributeAB) & is.null(eventattributeAI) & 
            is.null(eventattributeBI) ){
@@ -4849,5 +5004,114 @@ get.triad.stat <- function(data, time, sender, target, halflife, weight = NULL,
   }## closes else-type-var != null
   
 }#closing
+
+
+################################################################################
+##	Rate rem reg
+################################################################################
+
+remRate <- function(formula, dist = "weibull", var.names = NULL,
+                    event.sequence.type = "continuous", ...){
+  
+  ## TODO: check if var.names has correct length! => or allow.. inertia = get.inertia.stat(...) in the "formula"  					
+  
+  ## create warning in help-file: include ordered-event sequence!!
+  if ( event.sequence.type != "continuous" ){
+    stop("Ordinal event sequence not yet implemented.")
+  }
+  
+  ## check if formula-object is ok:
+  if ( class(formula) != "formula" ) {
+    stop("'formula' has to be a formula object.")
+  }
+  
+  ## dependent variable: get left-hand-side/response variable out of formula
+  lhs.var <- deparse(formula[[2]])  
+  ## ascribe lhs the real values of the dependent variable. if 
+  ## create.event.sequence() is used, it will be called here.
+  lhs <- eval(parse(text = lhs.var))  
+  
+  ## independent variables: get right-hand-side/explanatory variables out of formula
+  rhs <- paste0(deparse(formula[[3]]), collapse = "")
+  rhs <- gsub("\\s+", " ", rhs)
+  ## split them into individual terms
+  rhs <- strsplit(rhs, " \\+ ")[[1]]
+  indepVarsCounter = 1
+  indepVars = NULL
+  indepVariables <- NULL
+  for (i in 1:length(rhs)){
+    
+    ## interaction term here? = calculate values for variables
+    if ( grepl("\\*", rhs[i]) ){
+      temp <- strsplit(rhs[i], " \\* ")[[1]]
+      if ( length(temp) > 2){
+        stop("Three-way interaction terms not yet implemented.") #TODO
+      }
+      ## 1. Variable aus dem Interkationsterm
+      if ( is.null(indepVars)){
+        indepVars <- data.frame(eval(parse(text = temp[1])))
+      }else{
+        indepVars <- cbind(indepVars, eval(parse(text = temp[1])))
+      }
+      if ( is.null(var.names) == FALSE){
+        names(indepVars)[length(indepVars)] <- gsub(" ", "", var.names[indepVarsCounter])
+      }else{
+        names(indepVars)[length(indepVars)] <- as.character(temp[1])
+      }
+      indepVarsCounter <- indepVarsCounter + 1
+      
+      ## 2. Variable aus dem Interkationsterm
+      indepVars <- cbind(indepVars, eval(parse(text = temp[2])))
+      if ( is.null(var.names) == FALSE){
+        names(indepVars)[length(indepVars)] <- gsub(" ", "", var.names[indepVarsCounter])
+      }else{
+        names(indepVars)[length(indepVars)] <- as.character(temp[2])
+      }
+      indepVarsCounter <- indepVarsCounter + 1
+      
+      ## Interaction term for the formula - display correctly
+      interactionNames <- paste(names(indepVars)[length(indepVars)-1], 
+                                names(indepVars)[length(indepVars)], sep = "*" )
+      if (is.null(indepVariables)){
+        indepVariables <- interactionNames
+      }else{
+        indepVariables <- paste(indepVariables, interactionNames, sep = " + ")  
+      }     
+    }else{ #closes grepl *
+      ## get variable values (if there is no interaction term)
+      if ( is.null(indepVars)){
+        indepVars <- data.frame(eval(parse(text = rhs[i])))
+      }else{
+        indepVars <- cbind(indepVars, eval(parse(text = rhs[i])))
+      }
+      if ( is.null(var.names) == FALSE){
+        names(indepVars)[length(indepVars)] <- gsub(" ", "", var.names[indepVarsCounter])
+      }else{
+        names(indepVars)[length(indepVars)] <- rhs[i]	
+      }
+      if (is.null(indepVariables)){
+        indepVariables <- names(indepVars)[length(indepVars)]
+      }else{
+        indepVariables <- paste(indepVariables, 
+                                names(indepVars)[length(indepVars)], sep = " + ")  
+      }
+      indepVarsCounter <- indepVarsCounter + 1  
+    }   
+  }#closes i-loop
+  
+  ## create formula for flexsurvreg
+  #indepVariables <- paste(names(indepVars), collapse = " + ")
+  formula.flex <- as.formula(paste("Surv(lhs) ~ ", indepVariables))
+  
+  ## delete missing variables from the matrix of independent variables + dependent variable
+  #indepVars <- na.omit(indepVars)
+
+  ## hand it to flexsurvreg
+  fit <- flexsurv::flexsurvreg(formula.flex, dist = dist, data = indepVars, ...)
+  ##
+  return(fit)
+}
+
+
 
 

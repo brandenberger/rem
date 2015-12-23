@@ -9,6 +9,10 @@ degreeCpp <- function(time, weightvar, degreevar, typevar, type1, type2, attrvar
     .Call('rem_degreeCpp', PACKAGE = 'rem', time, weightvar, degreevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype)
 }
 
+degreeOneModeCpp <- function(time, weightvar, degreevar, degreeothermodevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype) {
+    .Call('rem_degreeOneModeCpp', PACKAGE = 'rem', time, weightvar, degreevar, degreeothermodevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype)
+}
+
 fourCycleCpp <- function(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType) {
     .Call('rem_fourCycleCpp', PACKAGE = 'rem', sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType)
 }
@@ -23,5 +27,17 @@ similaritySimpleCpp <- function(sender, target, time, xlog, eventAttributeVar, e
 
 similarityComplexCpp <- function(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
     .Call('rem_similarityComplexCpp', PACKAGE = 'rem', sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
+}
+
+reciprocityCpp <- function(time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype) {
+    .Call('rem_reciprocityCpp', PACKAGE = 'rem', time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype)
+}
+
+triadCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog) {
+    .Call('rem_triadCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
+}
+
+absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, weightvar, eventattributevar, eventattribute, xlog) {
+    .Call('rem_absoluteDiffAverageWeightEventAttributeCpp', PACKAGE = 'rem', sender, target, time, weightvar, eventattributevar, eventattribute, xlog)
 }
 

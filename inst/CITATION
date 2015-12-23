@@ -1,0 +1,13 @@
+citHeader("To cite the 'rem' package in publications use:")
+
+year <- sub(".*(2[[:digit:]]{3})-.*", "\\1", meta$Date)
+vers <- paste("R package version", meta$Version)
+
+citEntry(entry="Manual",
+  title = "rem: Relational Event Models",
+  author = personList(as.person("Laurence Brandenberger")),
+  year = year,
+  note = vers,
+  textVersion = paste("Brandenberger, Laurence (", year, "). ",
+      "rem: Relational Event Models. ", vers, ".", sep = "")
+)

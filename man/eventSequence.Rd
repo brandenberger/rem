@@ -23,8 +23,8 @@ eventSequence(datevar,
 \item{excludeDate}{ An optional string or string vector containing one or more dates that should be excluded from the event.sequence. The dates have to be in the same format as provided in \code{dateformat}. Only valid for continuous event sequences.}
 \item{excludeTypeOfDay}{ String value or vector naming the day(s) that should be excluded from the event sequence. Depending on the locale the weekdays may be named differently. Use \code{Sys.getlocale("LC_TIME")} to find which locale is installed.}
 \item{excludeYear}{ A string value or vector naming the year(s) that should be excluded from the event sequence.}
-\item{excludeFrom}{ A string value with the start value of the date from which on the event sequence should not be affected. The value has to be in the same format as specified in \code{dateformat}.}
-\item{excludeTo}{ A string value with the end value of the date to which time the event sequence should not be affected. The value has to be in the same format as specified in \code{dateformat}.}
+\item{excludeFrom}{ A string value (or a vector of strings) with the start value of the date from (from-value included) which the event sequence should not be affected. The value has to be in the same format as specified in \code{dateformat}.}
+\item{excludeTo}{ A string value (or a vector of strings) with the end value of the date to which time the event sequence should not be affected (to-value included). The value has to be in the same format as specified in \code{dateformat}.}
 \item{returnData}{ \code{TRUE/FALSE}. Default set to \code{FALSE}. The data frame provided is returned in full, together with the new variable for the event sequence. }
 \item{sortData}{ \code{TRUE/FALSE}. Default set to \code{FALSE}. Should only be used if \code{returnData = TRUE}. The entire data.frame will be ordered according to the event sequence.}
 }

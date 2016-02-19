@@ -3632,13 +3632,21 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
          (is.null(excludeFrom) & is.null(excludeTo)==FALSE) ){
     stop("Both 'excludeFrom' and 'excludeTo' variables need to be specified.")
   }
+
+  ## check if excludeFrom and excludeTo are of equal length
+  if ( is.null(excludeFrom) == FALSE & is.null(excludeTo) == FALSE & 
+         length(excludeFrom) != length(excludeTo) ){
+	stop("Both 'excludeFrom' and 'excludeTo' variables need to be of the same length.")
+  }
   
   ## check if excludeFrom is smaller than excludeTo
   if ( is.null(excludeFrom) == FALSE & is.null(excludeTo) == FALSE) {
-    if ( as.Date(excludeFrom, 
-                 format = dateformat) > as.Date(excludeTo,format = dateformat) ){
-      stop("'excludeFrom' is smaller than 'excludeTo'.")
-    }
+	for (h in length(excludeFrom)){
+		if (as.Date(excludeFrom[h], format = dateformat) > 
+		      as.Date(excludeTo[h], format = dateformat) ){
+	      stop("'excludeFrom' is smaller than 'excludeTo'.")
+	    }	    
+	}
   }
   
   ## check if type is specified correctly (either "continuous" or "ordinal")
@@ -3700,11 +3708,14 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
     }
     
     if ( is.null(excludeFrom)==FALSE & is.null(excludeTo)==FALSE ){
-      sequence$erase <- ifelse((sequence$date.sequence < 
-                                  as.Date(excludeFrom, format = dateformat) | 
-                                  sequence$date.sequence > 
-                                  as.Date(excludeTo, format = dateformat)), 1, 0)
-      sequence <- subset(sequence, sequence$erase == 1)
+	  sequence$erase <- 0
+	  for (k in 1:length(excludeFrom)){
+		  sequence$erase <- ifelse((sequence$date.sequence >= 
+	                                  as.Date(excludeFrom[k], format = dateformat) & 
+	                                  sequence$date.sequence <= 
+	                                  as.Date(excludeTo[k], format = dateformat)), 1, sequence$erase)
+	}
+      sequence <- subset(sequence, sequence$erase != 1)
     }
     
     ## give artificial sequence 1:length()

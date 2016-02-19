@@ -1548,28 +1548,28 @@ NumericVector similarityComplexCpp(
         //how large are the respextive vectors with the matches in them?
         if (a_positive.size() >= i_positive.size() && i_positive.size() != 0 ) {
           for (size_t p = 0; p < i_positive.size(); p++){
-            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2)/halflifeTimeDifference));
+            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2.0)/halflifeTimeDifference));
             sumCouplePositive = sumCouplePositive + couple;
             couple = 0;
           }
         }
         if (a_negative.size() >= i_negative.size() && i_negative.size() != 0) {
           for (size_t p = 0; p < i_negative.size(); p++){
-            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2)/halflifeTimeDifference));
+            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2.0)/halflifeTimeDifference));
             sumCoupleNegative = sumCoupleNegative + couple;
             couple = 0;
           }
         }
         if (i_positive.size() > a_positive.size() && a_positive.size() != 0) {
           for (size_t p = 0; p < a_positive.size(); p++){
-            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2)/halflifeTimeDifference));
+            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2.0)/halflifeTimeDifference));
             sumCouplePositive = sumCouplePositive + couple;
             couple = 0;
           }
         }
         if (i_negative.size() > a_negative.size() && a_negative.size() != 0) {
           for (size_t p = 0; p < a_negative.size(); p++){
-            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2)/halflifeTimeDifference));
+            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2.0)/halflifeTimeDifference));
             sumCoupleNegative = sumCoupleNegative + couple;
             couple = 0;
           }
@@ -1611,14 +1611,14 @@ NumericVector similarityComplexCpp(
              //how large are the respextive vectors with the matches in them?
              if (a_sendertarget.size() >= i_sendertarget.size() && i_sendertarget.size() != 0) {
                for (size_t p = 0; p < i_negative.size(); p++){
-                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2)/halflifeTimeDifference));
+                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2.0)/halflifeTimeDifference));
                  sumCoupleNoMatch = sumCoupleNoMatch + couple;
                  couple = 0;
                }
              }
              if (i_sendertarget.size() > a_sendertarget.size() && a_sendertarget.size() != 0) {
                for (size_t p = 0; p < a_positive.size(); p++){
-                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2)/halflifeTimeDifference));
+                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2.0)/halflifeTimeDifference));
                  sumCoupleNoMatch = sumCoupleNoMatch + couple;
                  couple = 0;
                }

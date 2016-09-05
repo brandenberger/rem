@@ -3761,7 +3761,8 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
         
         ## remove previous event-seq-variables
         if ( length(unique(grepl("event.seq.cont", names(data)))) == 2 ){
-          data <- subset(data, select = -c('event.seq.cont'))
+          data <- data[,-which(colnames(data) == "event.seq.cont")]
+          #data <- subset(data, select = -c(event.seq.cont))
         }
         
         ## 
@@ -3823,7 +3824,8 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
         
         ## remove previous event-seq-variables
         if ( length(unique(grepl("event.seq.ord", names(data)))) == 2 ){
-          data <- subset(data, select = -c('event.seq.ord'))
+          data <- data[,-which(colnames(data) == "event.seq.ord")]
+          #data <- subset(data, select = -c(event.seq.ord))
         }
         
         names(data)[length(data)] <- 'event.seq.ord'
@@ -5135,44 +5137,25 @@ createRemDataset <- function(data, sender, target, eventSequence,
           if(data$duplicate.sender.target[a] == FALSE){
             data$start[a] <- 0
           }else{
-            if(isTRUE(atEventTimesOnly)){
-              # start begins again from the next possible event
-              data$start[a] <- ifelse(is.null(eventAttribute),
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventSequence < eventSequence[a]])), 
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventAttribute == eventAttribute[a] & 
-                                                                           eventSequence < eventSequence[a]])))
-              if(data$start[a] == -Inf){
-                ## special case where two events occurr at the same time - the second
-                ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-                data$start[a] <- 0
-              }
-              # now give it the next possible value
-              data$start[a] <- which(allEventTimes > data$start[a])[1]
-            }else{
-              # starts from +1 after the last event
-              data$start[a] <- ifelse(is.null(eventAttribute),
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventSequence < eventSequence[a]])), 
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventAttribute == eventAttribute[a] & 
-                                                                           eventSequence < eventSequence[a]])))
-              if(data$start[a] == -Inf){
-                ## special case where two events occurr at the same time - the second
-                ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-                data$start[a] <- 0
-              }
-              data$start[a] <- data$start[a] + 1 # 1 eventday after the previous event took place
+            # start begins again from the next possible event
+            data$start[a] <- ifelse(is.null(eventAttribute),
+                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                         target == target[a] &
+                                                                         eventSequence < eventSequence[a]])), 
+                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                         target == target[a] &
+                                                                         eventAttribute == eventAttribute[a] & 
+                                                                         eventSequence < eventSequence[a]])))
+            if(data$start[a] == -Inf){
+              ## special case where two events occurr at the same time - the second
+              ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
+              data$start[a] <- 0
             }
+            # now give it the next possible value
+            data$start[a] <- which(allEventTimes > data$start[a])[1]
           }
         }#closes a-loop
-        
-      }else{ # match the start-date with the event-seq-date
+      }else{ # start-Date is not NULL
         if(is.null(timeformat)){
           if(class(time) != 'Date'){
             stop('time-Variable is not specified correctly. time-variable has 
@@ -5194,49 +5177,48 @@ createRemDataset <- function(data, sender, target, eventSequence,
         }else{
           data$duplicate.sender.target <- duplicated(paste0(sender, target, eventAttribute))
         }
-        
+        ## for each variable:
         for(a in 1:length(sender)){
           if(data$duplicate.sender.target[a] == FALSE){
-            data$start[a] <- 0
-          }else{
-            if(isTRUE(atEventTimesOnly)){
-              # start begins again from the next possible event
-              data$start[a] <- ifelse(is.null(eventAttribute),
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventSequence < eventSequence[a]])), 
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventAttribute == eventAttribute[a] & 
-                                                                           eventSequence < eventSequence[a]])))
-              if(data$start[a] == -Inf){
-                ## special case where two events occurr at the same time - the second
-                ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-                data$start[a] <- 0
-              }
-              # now give it the next possible value
-              data$start[a] <- which(allEventTimes > data$start[a])[1]
+            if(startDate[a] < min(time)){
+              data$start[a] <- 0
             }else{
-              # starts from +1 after the last event
-              data$start[a] <- ifelse(is.null(eventAttribute),
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventSequence < eventSequence[a]])), 
-                                      suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                           target == target[a] &
-                                                                           eventAttribute == eventAttribute[a] & 
-                                                                           eventSequence < eventSequence[a]])))
-              if(data$start[a] == -Inf){
-                ## special case where two events occurr at the same time - the second
-                ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-                data$start[a] <- 0
-              }
-              data$start[a] <- data$start[a] + 1 # 1 eventday after the previous event took place
+              data$start[a] <- min(eventSequence[time >= startDate[a]]) 
             }
+          }else{ # there are duplicates! 
+            ## two things need to be considered: 
+            ## first: a start date is given
+            ## and has to be matched to the time-variable for the closest
+            ## possible event to that data
+            ## second: if there are duplicates within the start-time interval, 
+            ## the duplicate time +1 needs to be taken
+            
+            # (1) smallest timepoint that is the same as the start-date or a unit more
+            whichStartPointB <- min(eventSequence[time >= startDate[a]]) 
+            
+            # (2) start begins again from the next possible event
+            whichStartPointA <- ifelse(is.null(eventAttribute),
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventSequence < eventSequence[a]])), 
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventAttribute == eventAttribute[a] & 
+                                                                            eventSequence < eventSequence[a]])))
+            # special case where two events occurr at the same time - the second
+            # event is duplicated, but there is no event earlier than itself, so it gets start = 0
+            if(whichStartPointA == -Inf){
+              whichStartPointA <- 0
+            }
+            # now give it the next possible value
+            whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
+            ## assign it the max value of the two possibilities
+            whichStartPoint <- c(whichStartPointA, whichStartPointB)
+            data$start[a] <- max(whichStartPoint)
           }
         }#closes a-loop
       }
-    }else{
+    }else{ #start is defined:
       ## here too: correct start-variable for duplicate events
       ## repeated events start 1eventday after the last identical event occurred
       if(is.null(eventAttribute)){
@@ -5246,44 +5228,64 @@ createRemDataset <- function(data, sender, target, eventSequence,
       }
       
       for(a in 1:length(sender)){
-        if(data$duplicate.sender.target[a] == FALSE){
-          data$start[a] <- 0
-        }else{
+        if(data$duplicate.sender.target[a] == FALSE){ # no duplicates
+          # if the start value is smaller than the lowest value of the event sequence
+          if(start[a] < min(eventSequence)){
+            data$start[a] <- 0
+          }else{
+            # otherwise take the start value that is provided
+            data$start[a] <- start[a]
+          }
+        }else{ # if there are duplicates! Attention!
           if(isTRUE(atEventTimesOnly)){
-            # start begins again from the next possible event
-            data$start[a] <- ifelse(is.null(eventAttribute),
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventSequence < eventSequence[a]])), 
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventAttribute == eventAttribute[a] & 
-                                                                         eventSequence < eventSequence[a]])))
-            if(data$start[a] == -Inf){
-              ## special case where two events occurr at the same time - the second
-              ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-              data$start[a] <- 0
+            # start begins from next possible event/
+            # (1) - start-value that is given 
+            whichStartPointB <- start[a]
+            # (2) - start-value from a duplicate event within that timespan
+            whichStartPointA <- ifelse(is.null(eventAttribute),
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventSequence < eventSequence[a]])), 
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventAttribute == eventAttribute[a] & 
+                                                                            eventSequence < eventSequence[a]])))
+            # special case where two events occurr at the same time - the second
+            # event is duplicated, but there is no event earlier than itself, so it gets start = 0
+            if(whichStartPointA == -Inf){
+              whichStartPointA <- 0
             }
             # now give it the next possible value
-            data$start[a] <- which(allEventTimes > data$start[a])[1]
-          }else{
-            # starts from +1 after the last event
-            data$start[a] <- ifelse(is.null(eventAttribute),
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventSequence < eventSequence[a]])), 
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventAttribute == eventAttribute[a] & 
-                                                                         eventSequence < eventSequence[a]])))
-            if(data$start[a] == -Inf){
-              ## special case where two events occurr at the same time - the second
-              ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-              data$start[a] <- 0
+            whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
+            ## Finally: assign it the max value of the two possibilities
+            whichStartPoint <- c(whichStartPointA, whichStartPointB)
+            data$start[a] <- max(whichStartPoint)
+            
+          }else{ #not at event times
+            # (1) take the start value provided
+            whichStartPointB <- start[a]
+            # (2) where is the last duplicate + 1
+            whichStartPointA <- ifelse(is.null(eventAttribute),
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventSequence < eventSequence[a]])), 
+                                       suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                            target == target[a] &
+                                                                            eventAttribute == eventAttribute[a] & 
+                                                                            eventSequence < eventSequence[a]])))
+            # special case where two events occurr at the same time - the second
+            # event is duplicated, but there is no event earlier than itself, so it gets start = 0
+            if(whichStartPointA == -Inf){
+              whichStartPointA <- 0
             }
-            data$start[a] <- data$start[a] + 1 # 1 eventday after the previous event took place
+            whichStartPointA <- whichStartPointA+1 # 1 eventday after the previous event took place
+            
+            ## Finally: 
+            whichStartPoint <- c(whichStartPointA, whichStartPointB)
+            data$start[a] <- max(whichStartPoint)
           }
         }
+        
       }#closes a-loop
     }
   }
@@ -5524,15 +5526,15 @@ timeToEvent <- function(time, type = 'time-to-next-event',
       stop('time variable not specified correctly. Has to be either 
            integer or Date class.')
     }
-    }else{
-      if(class(time) == 'integer' & class(timeEventPossible) == 'Date'){
-        stop('tiem and timeEventPossible not specified correclty.
+  }else{
+    if(class(time) == 'integer' & class(timeEventPossible) == 'Date'){
+      stop('tiem and timeEventPossible not specified correclty.
              Both variables have to be either integer or Date class objects.')
-      }else if(class(time) == 'Date' & class(timeEventPossible) == 'integer' ){
-        stop('tiem and timeEventPossible not specified correclty.
+    }else if(class(time) == 'Date' & class(timeEventPossible) == 'integer' ){
+      stop('tiem and timeEventPossible not specified correclty.
              Both variables have to be either integer or Date class objects.')
-      }
-      }
+    }
+  }
   
   ##
   timeToEventVar <- NULL

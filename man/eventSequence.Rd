@@ -12,7 +12,8 @@ eventSequence(datevar,
     excludeDate = NULL, excludeTypeOfDay = NULL, 
     excludeYear = NULL, excludeFrom = NULL, 
     excludeTo = NULL, returnData = FALSE, 
-    sortData = FALSE)
+    sortData = FALSE, 
+    returnDateSequenceData = FALSE)
 }
 \arguments{
 \item{datevar}{ The variable containing the information on the date and/or time of the event.}
@@ -27,6 +28,9 @@ eventSequence(datevar,
 \item{excludeTo}{ A string value (or a vector of strings) with the end value of the date to which time the event sequence should not be affected (to-value included). The value has to be in the same format as specified in \code{dateformat}.}
 \item{returnData}{ \code{TRUE/FALSE}. Default set to \code{FALSE}. The data frame provided is returned in full, together with the new variable for the event sequence. }
 \item{sortData}{ \code{TRUE/FALSE}. Default set to \code{FALSE}. Should only be used if \code{returnData = TRUE}. The entire data.frame will be ordered according to the event sequence.}
+\item{returnDateSequenceData}{ \code{TRUE/FALSE}. Boolean option to return
+the full information on which date matches to which sequence number instead
+of the event sequence (and corresponding data frame).}
 }
 \details{
 

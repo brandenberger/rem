@@ -170,7 +170,6 @@ inertiaStat <- function(data, time, sender, target, halflife,
   ## 
   result <- rep(NA, length(sender))
   
-  
   ## calculate the inertia effects for each event
   # (1): no type, no filter
   # (2): no type, with filter
@@ -4201,15 +4200,16 @@ reciprocityStat <- function(data, time, sender, target, halflife,
 
 
 ################################################################################
-##	Triads (one-mode statistic)
 ################################################################################
 
 triadStat <- function(data, time, sender, target, halflife, weight = NULL,
-                      eventtypevar = NULL, eventtypevalue = NULL, 
-                      eventattributevar = NULL, eventattributeAI = NULL,
-                      eventattributeBI = NULL, eventattributeAB = NULL,
+                      eventtypevar = NULL, eventtypevalues = NULL, 
+                      eventfiltervar = NULL, eventfilterAI = NULL,
+                      eventfilterBI = NULL, eventfilterAB = NULL,
+                      eventvar = NULL,
                       variablename = "triad", returnData = FALSE, 
-                      showprogressbar = FALSE){
+                      showprogressbar = FALSE, 
+                      inParallel = FALSE, cluster = NULL){
   
   ####### check inputs
   ## check if sender input is available
@@ -4275,47 +4275,73 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
            'friend' (or 'enemy') depending on the triad type.")
     }
     if ( length(grep(eventtypevalues[1], eventtypevar)) == 0 ) {
-      stop("First value '", eventattributeAB, "' is not an element of '", 
-           deparse(substitute(eventattributevar)) , "'.") 
+      stop("First value '", eventtypevalues[1], "' is not an element of '", 
+           deparse(substitute(eventtypevar)) , "'.") 
     }
     if ( length(grep(eventtypevalues[2], eventtypevar)) == 0 ) {
-      stop("Second value '", eventattributeAB, "' is not an element of '", 
-           deparse(substitute(eventattributevar)) , "'.") 
+      stop("Second value '", eventtypevalues[2], "' is not an element of '", 
+           deparse(substitute(eventtypevar)) , "'.") 
     }
   }
   
   ## check if event-attribute inputs are available and correctly specified
-  if ( is.null(eventattributevar) == FALSE ) {
+  if ( is.null(eventfiltervar) == FALSE ) {
     # check length of variable
-    if ( length(sender) != length(eventattributevar) ){
-      stop("'sender' and 'eventattributevar' are not of same length.")
+    if ( length(sender) != length(eventfiltervar) ){
+      stop("'sender' and 'eventfiltervar' are not of same length.")
     }
     # transform variable
-    eventattributevar <- as.character(eventattributevar)
-    if ( is.null(eventattributeAB) & is.null(eventattributeAI) & 
-         is.null(eventattributeBI) ){
-      stop("No 'eventattribute__' provided. Provide a string value by which the 
+    eventfiltervar <- as.character(eventfiltervar)
+    if ( is.null(eventfilterAB) & is.null(eventfilterAI) & 
+         is.null(eventfilterBI) ){
+      stop("No 'eventfilter__' provided. Provide a string value by which the 
            events are filtered.", )
     }
     # check if eventattributevalue is part of the variable
-    if ( is.null(eventattributeAB) == FALSE){
-      if ( length(grep(eventattributeAB, eventattributevar)) == 0 ) {
-        stop("Value '", eventattributeAB, "' is not an element of '", 
-             deparse(substitute(eventattributevar)) , "'.") 
+    if ( is.null(eventfilterAB) == FALSE){
+      if ( length(grep(eventfilterAB, eventfiltervar)) == 0 ) {
+        stop("Value '", eventfilterAB, "' is not an element of '", 
+             deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
-    if ( is.null(eventattributeAI) == FALSE){
-      if ( length(grep(eventattributeAI, eventattributevar)) == 0 ) {
-        stop("Value '", eventattributeAI, "' is not an element of '", 
-             deparse(substitute(eventattributevar)) , "'.") 
+    if ( is.null(eventfilterAI) == FALSE){
+      if ( length(grep(eventfilterAI, eventfiltervar)) == 0 ) {
+        stop("Value '", eventfilterAI, "' is not an element of '", 
+             deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
-    if ( is.null(eventattributeBI) == FALSE){
-      if ( length(grep(eventattributeBI, eventattributevar)) == 0 ) {
-        stop("Value '", eventattributeBI, "' is not an element of '", 
-             deparse(substitute(eventattributevar)) , "'.") 
+    if ( is.null(eventfilterBI) == FALSE){
+      if ( length(grep(eventfilterBI, eventfiltervar)) == 0 ) {
+        stop("Value '", eventfilterBI, "' is not an element of '", 
+             deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
+  }
+  
+  ## check event-var
+  if(is.null(eventvar) == FALSE){
+    if(length(unique(eventvar)) == 2){
+      if( ( sort(unique(eventvar))[1] == 0 & sort(unique(eventvar))[2] == 1  ) == FALSE){
+        stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+      }
+    }else{
+      stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+    }
+  }
+  
+  ## cannot take parallel and progress bar
+  if(isTRUE(inParallel) & isTRUE(showprogressbar)){
+    stop('Cannot spit out progress of the function whilst running the 
+         loop in parallel. Turn showprogressbar to FALSE.')
+  }
+  
+  ## cannot have parallel without cluster
+  if(isTRUE(inParallel) & is.null(cluster)){
+    stop('By choosing to run the loop in parallel, you need to define a 
+         cluster. For instance: makeCluster(12, type="FORK"). Alternatively, 
+         hand over the number of nodes you would like to run the function on.')
   }
   
   ## check if variablename makes sense (no " " etc.)
@@ -4325,279 +4351,248 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
   ##TODO: should there be an event-id-variable?? => that would be useful here
   data.short <- data.frame(time)
   
+  ## 
+  result <- rep(NA, length(sender))
+  
   ## calculate part of decay function
   xlog <- log(2)/halflife 
   
+  ## calculate event-data sets
+  if(is.null(eventvar)){
+    senderLoop <- sender
+    targetLoop <- target
+    weightLoop <- weight
+    timeLoop <- time
+    # eventtype
+    if(is.null(eventtypevar)){
+      eventtypevarLoop <- rep("1", length(sender))
+      typeALoop <- "1"
+      typeBLoop <- "1"
+    }else{ #eventtype given
+      eventtypevarLoop <- eventtypevar
+      typeALoop <- eventtypevalues[1]
+      typeBLoop <- eventtypevalues[2]
+    }
+    # eventfilter: AB
+    if(is.null(eventfilterAB)){
+      eventfiltervarABLoop <- rep("1", length(sender))
+      eventfilterABLoop <- "1"
+    }else{ #eventfilterAB given:
+      eventfiltervarABLoop <- eventfiltervar
+      eventfilterABLoop <- eventfilterAB
+    }
+    # eventfilter: AI
+    if(is.null(eventfilterAI)){
+      eventfiltervarAILoop <- rep("1", length(sender))
+      eventfilterAILoop <- "1"
+    }else{ #eventfilter given:
+      eventfiltervarAILoop <- eventfiltervar
+      eventfilterAILoop <- eventfilterAI
+    }
+    # eventfilter BI
+    if(is.null(eventfilterBI)){
+      eventfiltervarBILoop <- rep("1", length(sender))
+      eventfilterBILoop <- "1"
+    }else{ #eventfilter given:
+      eventfiltervarBILoop <- eventfiltervar
+      eventfilterBILoop <- eventfilterBI
+    }
+  }else{ # if counting process data is given:
+    senderLoop <- sender[eventvar == 1]
+    targetLoop <- target[eventvar == 1]
+    weightLoop <- weight[eventvar == 1]
+    timeLoop <- time[eventvar == 1]
+    if(is.null(eventtypevar)){
+      eventtypevarLoop <- rep("1", length(senderLoop))
+      typeALoop <- "1"
+      typeBLoop <- "1"
+    }else{ #eventtype given
+      eventtypevarLoop <- eventtypevar[eventvar == 1]
+      typeALoop <- eventtypevalues[1]
+      typeBLoop <- eventtypevalues[2]
+    }
+    # eventfilter: AB
+    if(is.null(eventfilterAB)){
+      eventfiltervarABLoop <- rep("1", length(sender)) ## eventfiltervarABLoop keeps its original length => does not get reduced!
+      eventfilterABLoop <- "1"
+    }else{ #eventfilterAB given:
+      eventfiltervarABLoop <- eventfiltervar # not subsetted, bc it's used in the outter i-loop, not the cpp-loop with the reduced data set
+      eventfilterABLoop <- eventfilterAB
+    }
+    # eventfilter: AI
+    if(is.null(eventfilterAI)){
+      eventfiltervarAILoop <- rep("1", length(senderLoop))
+      eventfilterAILoop <- "1"
+    }else{ #eventfilter given:
+      eventfiltervarAILoop <- eventfiltervar[eventvar == 1]
+      eventfilterAILoop <- eventfilterAI
+    }
+    # eventfilter BI
+    if(is.null(eventfilterBI)){
+      eventfiltervarBILoop <- rep("1", length(senderLoop))
+      eventfilterBILoop <- "1"
+    }else{ #eventfilter given:
+      eventfiltervarBILoop <- eventfiltervar[eventvar == 1]
+      eventfilterBILoop <- eventfilterBI
+    }
+  }
+  
   ####### calculate stat
-  ## create placeholder-variables to be used in the cpp-Function
-  placeholder <- rep("1", length(time))
   
-  ## calculate the triad effects for each event
-  
-  ## all the statistics without an event type
-  if ( is.null(eventtypevar) ){
-    ## all stats without an event type and an event attribute
-    if ( is.null(eventattributevar) ){
-      ## (1) no type, no attribute. Simple triad-effect
-      result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                         placeholder, "1", placeholder, "1", placeholder, "1",
-                         xlog )  	
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 triad variable that was generated
-        return(result)
-      }      
-    }else{
-      ## all stats without event type but with event attribute
-      ## (2) no type, attributeAB
-      if ( is.null(eventattributeAI) & is.null(eventattributeBI) & is.null(eventattributeAB) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           eventattributevar, eventattributeAB, placeholder, "1", 
-                           placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
+  ##
+  if(isTRUE(inParallel)){
+    
+    ##
+    doParallel::registerDoParallel(cluster)
+    
+    ##
+    res <- foreach::foreach(i=1:length(sender), .combine=rbind)%dopar%{
+      
+      ## check if eventfilterAB is TRUE
+      if(eventfiltervarABLoop[i] == eventfilterABLoop){
+        
+        ## get list of parters sender and target have interacted with
+        # With whom (other than target B) has sender interacted in the past? => AI
+        xa <- targetLoop[senderLoop == sender[i] & 
+                           targetLoop != target[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeALoop & 
+                           eventfiltervarAILoop == eventfilterAILoop]
+        xb <- senderLoop[targetLoop == sender[i] & 
+                           senderLoop != target[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeALoop & 
+                           eventfiltervarAILoop == eventfilterAILoop]
+        x <- unique(c(xa, xb))
+        # With whom has target interacted in past? (other than current sender)
+        ya <- targetLoop[senderLoop == target[i] & 
+                           targetLoop != sender[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeBLoop & 
+                           eventfiltervarBILoop == eventfilterBILoop]
+        yb <- senderLoop[targetLoop == target[i] & 
+                           senderLoop != sender[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeBLoop & 
+                           eventfiltervarBILoop == eventfilterBILoop]
+        y <- unique(c(ya, yb))
+        
+        ## Do x and y overlap?
+        v <- intersect(x, y)
+        
+        ## if they overlap, run the cpp-loop, otherwise return result = 0
+        if(length(v) == 0){
+          result <- 0
+        }else{ #if the sender and target have one in common => run cpp-loop
+          
+          # find i in reduced data set
+          if(is.null(eventvar)){
+            iLoop <- i-1 # bc cpp-loops start at 0 not 1
+          }else{
+            iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
+          }
+          
+          # run the cpp-loop
+          result <- triadCpp(v, senderLoop, targetLoop, timeLoop, weightLoop,
+                             eventtypevarLoop, typeALoop, typeBLoop, 
+                             eventfiltervarAILoop, eventfilterAILoop, 
+                             eventfiltervarBILoop, eventfilterBILoop, 
+                             xlog, iLoop, 
+                             sender[i], target[i], time[i])
         }
-      }
-      ## (3) no type, attributeAI
-      if ( is.null(eventattributeAB) & is.null(eventattributeBI) & is.null(eventattributeAI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           placeholder, "1", eventattributevar, eventattributeAI,
-                           placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        } 
-      }
-      ## (4) no type, attributeBI
-      if ( is.null(eventattributeAB) & is.null(eventattributeAI) & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           placeholder, "1", placeholder, "1", eventattributevar,
-                           eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        } 
-      }
-      ## (5) no type, attributeAB & attributeAI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           eventattributevar, eventattributeAB, eventattributevar, 
-                           eventattributeAI, placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }      
-      }
-      ## (6) no type, attribute AB & attributeBI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI)  & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           eventattributevar, eventattributeAB, placeholder, 
-                           "1", eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      ## (7) no type, attribute AI & attributeBI
-      if ( is.null(eventattributeAB) & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           placeholder, "1", eventattributevar, 
-                           eventattributeAI, eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      ## (8) no type, attribute AB & attributeAI & attributeBI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, placeholder, "1", "1", 
-                           eventattributevar, eventattributeAB, eventattributevar, 
-                           eventattributeAI, eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
+      }else{ # if eventfilterAB[i] != eventfilterAB
+        result <- 0
       }
       
-    }#closes else attributevar != null   
-  }else{
-    ## all the statistics with an event type
-    if ( is.null(eventattributevar) ){
-      ## with type, but no attribute
-      ## (9) type, no attribute
-      if ( is.null(eventattributeAB)  & is.null(eventattributeAI)  & is.null(eventattributeBI)  ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           placeholder, "1", placeholder, 
-                           "1", placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
+      ## rbind the variable:
+      result
+    } #closes i-loop
+    
+    ## transform result variable
+    result <- as.numeric(as.character(res))
+  }else{ # run loop without parallelization
+    
+    ## 
+    if(isTRUE(showprogressbar)){
+      pb <- txtProgressBar(min = 1, max = length(sender), style = 3)
+    }
+    for(i in 1:length(sender)){
+      if(isTRUE(showprogressbar)){
+        setTxtProgressBar(pb, i)
       }
       
-    }else{
-      ## all stats with type and attribute
-      ## (10) type, attributeAB
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI)  & is.null(eventattributeBI)  ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           eventattributevar, eventattributeAB, placeholder, 
-                           "1", placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
+      ## check if eventfilterAB is TRUE
+      if(eventfiltervarABLoop[i] == eventfilterABLoop){
+        
+        ## get list of parters sender and target have interacted with
+        # With whom (other than target B) has sender interacted in the past? => AI
+        xa <- targetLoop[senderLoop == sender[i] & 
+                           targetLoop != target[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeALoop & 
+                           eventfiltervarAILoop == eventfilterAILoop]
+        xb <- senderLoop[targetLoop == sender[i] & 
+                           senderLoop != target[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeALoop & 
+                           eventfiltervarAILoop == eventfilterAILoop]
+        x <- unique(c(xa, xb))
+        # With whom has target interacted in past? (other than current sender)
+        ya <- targetLoop[senderLoop == target[i] & 
+                           targetLoop != sender[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeBLoop & 
+                           eventfiltervarBILoop == eventfilterBILoop]
+        yb <- senderLoop[targetLoop == target[i] & 
+                           senderLoop != sender[i] & 
+                           timeLoop < time[i] & 
+                           eventtypevarLoop == typeBLoop & 
+                           eventfiltervarBILoop == eventfilterBILoop]
+        y <- unique(c(ya, yb))
+        
+        ## Do x and y overlap?
+        v <- intersect(x, y)
+        
+        ## if they overlap, run the cpp-loop, otherwise return result = 0
+        if(length(v) == 0){
+          result[i] <- 0
+        }else{ #if the sender and target have one in common => run cpp-loop
+          
+          # find i in reduced data set
+          if(is.null(eventvar)){
+            iLoop <- i-1 # bc cpp-loops start at 0 not 1
+          }else{
+            iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
+          }
+          # run the cpp-loop
+          result[i] <- triadCpp(v, senderLoop, targetLoop, timeLoop, weightLoop,
+                                eventtypevarLoop, typeALoop, typeBLoop, 
+                                eventfiltervarAILoop, eventfilterAILoop, 
+                                eventfiltervarBILoop, eventfilterBILoop, 
+                                xlog, iLoop, 
+                                sender[i], target[i], time[i])
         }
+      }else{ # if eventfilterAB[i] != eventfilterAB
+        result[i] <- 0
       }
-      
-      ## (11) type, attributeAI
-      if ( is.null(eventattributeAB)  & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI)  ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           placeholder, "1", eventattributevar, 
-                           eventattributeAI, placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-      ## (12) type, attributeBI
-      if ( is.null(eventattributeAB)  & is.null(eventattributeAI)  & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           placeholder, "1", placeholder, 
-                           "1", eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-      ## (13) type, attributeAB & attributeAI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           eventattributevar, eventattributeAB, eventattributevar, 
-                           eventattributeAI, placeholder, "1", xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-      ## (14) type, attribute AB & attributeBI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI)  & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           eventattributevar, eventattributeAB, placeholder, 
-                           "1", eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-      ## (15) type, attribute AI & attributeBI
-      if ( is.null(eventattributeAB)  & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           placeholder, "1", eventattributevar, 
-                           eventattributeAI, eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-      ## (16) type, attribute AB & attributeAI & attributeBI
-      if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAI) == FALSE & is.null(eventattributeBI) == FALSE ){
-        result <- triadCpp(sender, target, time, weight, eventtypevar, eventtypevalues[1], eventtypevalues[2], 
-                           eventattributevar, eventattributeAB, eventattributevar, 
-                           eventattributeAI, eventattributevar, eventattributeBI, xlog )    
-        if ( returnData == TRUE ) {
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 triad variable that was generated
-          return(result)
-        }
-      }
-      
-    }##closes else attr-var != null
-  }## closes else-type-var != null
+    }# closes i-loop
+  } # closes if no parallel
+
+  ## return results
+  ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
+  if ( returnData == TRUE ) {
+    ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
+    data <- cbind(data, result)
+    names(data)[length(data)] <- variablename
+    ## return the data frame with the variable bound to it
+    return(data)
+  }else{ 
+    ## only return the 1 inertia variable that was generated
+    return(result)
+  }
   
 }#closing
+
 
 
 ################################################################################

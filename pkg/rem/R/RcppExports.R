@@ -33,8 +33,8 @@ reciprocityCpp <- function(time, weightvar, sender, target, typevar, type1, type
     .Call('rem_reciprocityCpp', PACKAGE = 'rem', time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype)
 }
 
-triadCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog) {
-    .Call('rem_triadCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
+triadCpp <- function(v, sender, target, time, weightvar, typevar, typeA, typeB, attributevarAI, attrAI, attributevarBI, attrBI, xlog, i, currentSender, currentTarget, currentTime) {
+    .Call('rem_triadCpp', PACKAGE = 'rem', v, sender, target, time, weightvar, typevar, typeA, typeB, attributevarAI, attrAI, attributevarBI, attrBI, xlog, i, currentSender, currentTarget, currentTime)
 }
 
 weightTimesSummationCpp <- function(pastSenderTimes, xlog, currentTime, weightvar) {
@@ -43,5 +43,9 @@ weightTimesSummationCpp <- function(pastSenderTimes, xlog, currentTime, weightva
 
 absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, weightvar, eventattributevar, eventattribute, xlog) {
     .Call('rem_absoluteDiffAverageWeightEventAttributeCpp', PACKAGE = 'rem', sender, target, time, weightvar, eventattributevar, eventattribute, xlog)
+}
+
+triadOldCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog) {
+    .Call('rem_triadOldCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
 }
 

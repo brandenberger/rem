@@ -11,8 +11,8 @@
 \tabular{ll}{
 Package: \tab rem\cr
 Type: \tab Package\cr
-Version: \tab 1.1.4\cr
-Date: \tab 2016-09-05\cr
+Version: \tab 1.1.5\cr
+Date: \tab 2016-09-07\cr
 }
 }
 \author{

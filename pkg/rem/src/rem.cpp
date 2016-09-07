@@ -1985,3 +1985,26 @@ NumericVector triadCpp(
     } // closes i-loop
     return Rcpp::wrap(result);
   }
+
+
+//####################################################################
+// [[Rcpp::export]]
+double weightTimesSummationCpp(
+  NumericVector pastSenderTimes,
+  double xlog, 
+  double currentTime, 
+  NumericVector weightvar) {
+
+  double totalWeight = 0.0;
+  double weight = 0.0;
+  double result = 0.0;
+
+  // for each bill that the current sender has cosponsored in past
+  for (int j = 0; j < pastSenderTimes.size(); j++){
+    weight = weightvar[j] * exp( - ( currentTime - pastSenderTimes[j] ) * xlog)  * xlog;
+    totalWeight = totalWeight + weight ;
+  }// close j-loop
+
+  result = totalWeight;
+  return result;
+}

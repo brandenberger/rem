@@ -199,6 +199,20 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// weightTimesSummationCpp
+double weightTimesSummationCpp(NumericVector pastSenderTimes, double xlog, double currentTime, NumericVector weightvar);
+RcppExport SEXP rem_weightTimesSummationCpp(SEXP pastSenderTimesSEXP, SEXP xlogSEXP, SEXP currentTimeSEXP, SEXP weightvarSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< NumericVector >::type pastSenderTimes(pastSenderTimesSEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    __result = Rcpp::wrap(weightTimesSummationCpp(pastSenderTimes, xlog, currentTime, weightvar));
+    return __result;
+END_RCPP
+}
 // absoluteDiffAverageWeightEventAttributeCpp
 NumericVector absoluteDiffAverageWeightEventAttributeCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> eventattributevar, std::string eventattribute, double xlog);
 RcppExport SEXP rem_absoluteDiffAverageWeightEventAttributeCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP eventattributevarSEXP, SEXP eventattributeSEXP, SEXP xlogSEXP) {

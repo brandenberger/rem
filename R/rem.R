@@ -585,11 +585,7 @@ inertiaStat <- function(data, time, sender, target, halflife,
               } # closes if no parallel
               
               ##
-              if(b == uniqueEventTypeValues[2] & a == uniqueEventTypeValues[1]){
-                data.short <- result
-              }else{
-                data.short <- cbind(data.short, result)
-              }
+              data.short <- cbind(data.short, result)
               
               ## change the name of the data.short's last column
               names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
@@ -780,11 +776,7 @@ inertiaStat <- function(data, time, sender, target, halflife,
               } # closes if no parallel
               
               ##
-              if(b == uniqueEventTypeValues[2] & a == uniqueEventTypeValues[1]){
-                data.short <- result
-              }else{
-                data.short <- cbind(data.short, result)
-              }
+              data.short <- cbind(data.short, result)
               
               ## change the name of the data.short's last column
               names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
@@ -907,11 +899,13 @@ inertiaStat <- function(data, time, sender, target, halflife,
 
 degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                        eventtypevar = NULL, eventtypevalue = "valuematch", 
-                       eventattributevar = NULL, 
-                       eventattributevalue = "valuematch", 
-                       degree.on.other.var = NULL,
+                       eventfiltervar = NULL, 
+                       eventfiltervalue = NULL, 
+                       eventvar = NULL,
+                       degreeOnOtherVar = NULL,
                        variablename = "degree", returnData = FALSE, 
-                       showprogressbar = FALSE){
+                       showprogressbar = FALSE, 
+                       inParallel = FALSE, cluster = NULL){
   
   ####### check inputs
   ## check if degreevar input is available
@@ -945,11 +939,11 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
   }
   
   ## check if degree.on.other.var and degreevar are of same length
-  if ( !is.null(degree.on.other.var)){
-    if ( length(degreevar) != length(degree.on.other.var) ){
+  if ( !is.null(degreeOnOtherVar)){
+    if ( length(degreevar) != length(degreeOnOtherVar) ){
       stop("'degree.on.other.var' and 'degreevar' are not of same length.")
     }
-    degree.on.other.var <- as.character(degree.on.other.var)
+    degreeOnOtherVar <- as.character(degreeOnOtherVar)
   }
   
   ## check if event-type inputs are available and correctly specified
@@ -984,32 +978,53 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
   }
   
   ## check if event-attribute inputs are available and correctly specified
-  if ( is.null(eventattributevar) == FALSE ) {
-    # check if degreevar and eventattributevar are of same length
-    if (length(degreevar) != length(eventattributevar)){
-      stop("'eventtypevar' and 'eventattributevar' are not of the same length.")
+  if ( is.null(eventfiltervar) == FALSE ) {
+    # check length
+    if (length(degreevar) != length(eventfiltervar)){
+      stop("'eventfiltervar' and 'degreevar' are not of the same length.")
     }
-    # transform eventattributevar
-    eventattributevar <- as.character(eventattributevar)
-    if ( is.null(eventattributevalue) ){
-      stop("No 'eventattributevalue' provided. Use default 'valuematch', or 'valuemix' or string value(s) to determine by which values the events should be filtered.", )
+    # transform
+    eventfiltervar <- as.character(eventfiltervar)
+    if ( is.null(eventfiltervalue) ){
+      stop("No 'eventfiltervalue' provided. Which value should be filtered for?", )
     }
     # check if eventattributevalue is part of the variable
-    if ( length(eventattributevalue) > 1 ){
-      for ( i in 1:length(eventattributevalue) ){
-        if ( length(grep(eventattributevalue[i], eventattributevar)) == 0 ) {
-          stop("Value '", eventattributevalue[i], "' is not an element of '", as.name(eventattributevar), "'.")  ##deparse(substitute(eventattributevar))
+    if ( length(eventfiltervalue) > 0 ){
+      for ( i in 1:length(eventfiltervalue) ){
+        if ( length(grep(eventfiltervalue[i], eventfiltervar)) == 0 ) {
+          stop("Value '", eventfiltervalue[i], "' is not an element of '", as.name(eventfiltervar), "'.")  ##deparse(substitute(eventattributevar))
         }
       }#closes i-loop  
-      if ( length(unique(duplicated(eventattributevalue))) == 2 ) {
-        stop("Duplicate values in 'eventattributevalue'.") 
-      }
-    }else if ( eventattributevalue != "valuematch" &  eventattributevalue != "valuemix") {
-      if ( length(grep(eventattributevalue, eventattributevar)) == 0 ) {
-        ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventattributevalue, "' is not an element of '", deparse(substitute(eventattributevar)) , "'.") ##deparse(substitute(eventtypevar))
+      if ( length(unique(duplicated(eventfiltervalue))) == 2 ) {
+        stop("Duplicate values in 'eventfiltervalue'.") 
       }
     }
+  }
+  
+  ## check event-var
+  if(is.null(eventvar) == FALSE){
+    if(length(unique(eventvar)) == 2){
+      if( ( sort(unique(eventvar))[1] == 0 & sort(unique(eventvar))[2] == 1  ) == FALSE){
+        stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+      }
+    }else{
+      stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+    }
+  }
+  
+  ## cannot take parallel and progress bar
+  if(isTRUE(inParallel) & isTRUE(showprogressbar)){
+    stop('Cannot spit out progress of the function whilst running the 
+         loop in parallel. Turn showprogressbar to FALSE.')
+  }
+  
+  ## cannot have parallel without cluster
+  if(isTRUE(inParallel) & is.null(cluster)){
+    stop('By choosing to run the loop in parallel, you need to define a 
+         cluster. For instance: makeCluster(12, type="FORK"). Alternatively, 
+         hand over the number of nodes you would like to run the function on.')
   }
   
   ## check if variablename makes sense (no " " etc.)
@@ -1022,216 +1037,538 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
   ## calculate part of decay function
   xlog <- log(2)/halflife 
   
+  ## use event-filter if counting process data is used
+  if(is.null(eventvar)){
+    countingProcessVar <- rep(1, length(degreevar))
+  }else{
+    countingProcessVar <- eventvar
+  }
+  
+  ## specify degreevariable
+  if(is.null(degreeOnOtherVar)){
+    currentEventDegreeVar <- degreevar
+    pastEventDegreeVar <- degreevar
+  }else{
+    currentEventDegreeVar <- degreevar
+    pastEventDegreeVar <- degreeOnOtherVar
+  }
+  
+  ## 
+  result <- rep(NA, length(degreevar))
+  
   ####### calculate stat
-  ## create placeholder-variables to be used in the cpp-Function
-  placeholder <- rep("1", length(time))
-  
   ## calculate the degree effects for each event
-  
-  ## if 
-  if ( is.null(degree.on.other.var) ){
-    if ( is.null(eventtypevar) ) {
-      if ( is.null(eventattributevar) ) {
-        ## (1) start off with simple degree function: no type, no attribute
-        result <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", placeholder, "1", "1", xlog, "d-only")		
-        ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
+  ## calculate the degree effects for each event
+  # (1): no type, no filter
+  # (2): no type, with filter
+  # (3): valuematch, no filter
+  # (4): valuematch, with filter
+  # (5): valuemix/values provided, no filter
+  # (6): valuemix/values provided, with filter
+  if ( is.null(eventtypevar) ) {
+    if ( is.null(eventfiltervar) ) {
+      ################ (1) start off with simple inertia function: no type, no filter
+      # run in parallel?
+      if(isTRUE(inParallel)){
+        
+        ##
+        doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+        res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+          
+          ## create vector of times, degreevar--target tie was made before
+          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                      time < time[i] & countingProcessVar == 1]
+          ## get weight
+          if(is.null(weight)){
+            weightInertiaPast <- rep(1, length(timesIntertiaPast))
+          }else{
+            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                          time < time[i] & countingProcessVar == 1]
+          }
+          
+          ## run cpp-loop for all times
+          result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                            weightInertiaPast) 
+          ## rbind the variable:
+          result 
+        }# closes foreach-loop
+        
+        ## transform result variable
+        result <- as.numeric(as.character(res))
+        
+      }else{ # run in standard form
+        
+        if(isTRUE(showprogressbar)){
+          pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+        }
+        for(i in 1:length(degreevar)){
+          if(isTRUE(showprogressbar)){
+            setTxtProgressBar(pb, i)
+          }
+          
+          
+          ## create vector of times, degreevar--target tie was made before
+          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                      time < time[i] & countingProcessVar == 1]
+          ## get weight
+          if(is.null(weight)){
+            weightInertiaPast <- rep(1, length(timesIntertiaPast))
+          }else{
+            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                          time < time[i] & countingProcessVar == 1]
+          }
+          
+          ## run cpp-loop for all times
+          result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                               weightInertiaPast) 
+          
+        } #closes i-loop
+      } # closes if no parallel
+      
+      ## return results
+      ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
+      if ( returnData == TRUE ) {
+        ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
+        data <- cbind(data, result)
+        names(data)[length(data)] <- variablename
+        ## return the data frame with the variable bound to it
+        return(data)
+      }else{ 
+        ## only return the 1 inertia variable that was generated
+        return(result)
+      }
+      ################ done (1)
+      
+    }else{ # if eventfiltervar = given
+      ################ (2) no type,  with filter
+      # run in parallel?
+      if(isTRUE(inParallel)){
+        
+        ##
+        doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+        res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+          
+          ## create vector of times, sender--target tie was made before
+          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                      time < time[i] & countingProcessVar == 1 &
+                                      eventfiltervar == eventfiltervalue]
+          ## get weight
+          if(is.null(weight)){
+            weightInertiaPast <- rep(1, length(timesIntertiaPast))
+          }else{
+            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                          time < time[i] & countingProcessVar == 1 &
+                                          eventfiltervar == eventfiltervalue]
+          }
+          
+          ## run cpp-loop for all times
+          result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                            weightInertiaPast) 
+          ## rbind the variable:
+          result 
+        }# closes foreach-loop
+        
+        ## transform result variable
+        result <- as.numeric(as.character(res))
+        
+      }else{ # run in standard form
+        
+        if(isTRUE(showprogressbar)){
+          pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+        }
+        for(i in 1:length(degreevar)){
+          if(isTRUE(showprogressbar)){
+            setTxtProgressBar(pb, i)
+          }
+          
+          
+          ## create vector of times, sender--target tie was made before
+          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                      time < time[i] & countingProcessVar == 1 &
+                                      eventfiltervar == eventfiltervalue]
+          ## get weight
+          if(is.null(weight)){
+            weightInertiaPast <- rep(1, length(timesIntertiaPast))
+          }else{
+            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                          time < time[i] & countingProcessVar == 1 &
+                                          eventfiltervar == eventfiltervalue]
+          }
+          
+          ## run cpp-loop for all times
+          result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                               weightInertiaPast) 
+          
+        } #closes i-loop
+      } # closes if no parallel
+      
+      ## return results
+      ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
+      if ( returnData == TRUE ) {
+        ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
+        data <- cbind(data, result)
+        names(data)[length(data)] <- paste(variablename, "filtered", sep = ".")
+        
+        ## return the data frame with the variable bound to it
+        return(data)
+      }else{ 
+        ## only return the 1 inertia variable that was generated
+        return(result)
+      }
+      ################ done (2)
+    } # closes if-eventfiltervar == given
+    
+  }else{ # if eventtypevar = given
+    if(eventtypevalue == 'valuematch'){
+      if ( is.null(eventfiltervar) ) {
+        
+        ################ ## (3) valuematch, no filter
+        # run in parallel?
+        if(isTRUE(inParallel)){
+          
+          ##
+          doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+          res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+            
+            
+            ## create vector of times, sender--target tie was made before
+            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                        time < time[i] & countingProcessVar == 1 &
+                                        eventtypevar == eventtypevar[i]]
+            ## get weight
+            if(is.null(weight)){
+              weightInertiaPast <- rep(1, length(timesIntertiaPast))
+            }else{
+              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == eventtypevar[i]]
+            }
+            
+            ## run cpp-loop for all times
+            result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                              weightInertiaPast) 
+            ## rbind the variable:
+            result 
+          }# closes foreach-loop
+          
+          ## transform result variable
+          result <- as.numeric(as.character(res))
+          
+        }else{ # run in standard form
+          
+          if(isTRUE(showprogressbar)){
+            pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+          }
+          for(i in 1:length(degreevar)){
+            if(isTRUE(showprogressbar)){
+              setTxtProgressBar(pb, i)
+            }
+            
+            
+            ## create vector of times, degreevar--target tie was made before
+            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                        time < time[i] & countingProcessVar == 1 &
+                                        eventtypevar == eventtypevar[i]]
+            ## get weight
+            if(is.null(weight)){
+              weightInertiaPast <- rep(1, length(timesIntertiaPast))
+            }else{
+              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == eventtypevar[i]]
+            }
+            
+            ## run cpp-loop for all times
+            result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                 weightInertiaPast) 
+            
+          } #closes i-loop
+        } # closes if no parallel
+        
+        ## return results
+        ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
         if ( returnData == TRUE ) {
           ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
           data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
+          names(data)[length(data)] <- paste(variablename, "typematch", sep = ".")
           ## return the data frame with the variable bound to it
           return(data)
         }else{ 
-          ## only return the 1 degree variable that was generated
+          ## only return the 1 inertia variable that was generated
           return(result)
         }
-      }else{
-        ## all the functions with event attribute variable but no type variable:
-        if ( length(eventattributevalue) == 1 ){
-          if ( eventattributevalue == "valuematch" ){
-            ## (2) with eventattributevalue set to "valuematch"
-            result <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, "1", "1", xlog, "d-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
-              
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          } else if ( eventattributevalue != "valuemix" ) {
-            ## (3) with one eventattirbutevalue selected (and used as filter)
-            result <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, eventattributevalue, "1", xlog, "d-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          } else if ( eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, i, j, xlog, "d-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")									
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, i, i, xlog, "d-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter? now it only filter!)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-              
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }	
-          }
-        } else if ( length(eventattributevalue) > 1 ) {
-          ## (4) with specific eventattributevalues selected
-          for (i in eventattributevalue){
-            for (j in eventattributevalue){
-              if ( i != j ){
-                ## calculate degree for the two distinct attribute-values
-                temp <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, i, j, xlog, "d-attributemix")		
-                data.short <- cbind(data.short, temp)
-                names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                               gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                               gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                               sep = ".")
-              }
-            }#closes j-loop
-            ## calculate degree for the attribute-values where i and j are the same (both i used)
-            temp <- degreeCpp(time, weight, degreevar, placeholder, "1", "1", eventattributevar, i, i, xlog, "d-attributemix")		
-            ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-            data.short <- cbind(data.short, temp)
-            names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                           gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                           gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                           sep = ".")
+        ################ done (3)
+        
+      }else{ # if eventfiltervar = given
+        
+        ################ ## (4) valuematch, with filter
+        # run in parallel?
+        if(isTRUE(inParallel)){
+          
+          ##
+          doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+          res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
             
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }
-        } #closes if ( length(eventattributevalue) > 1 ) 
-      } #closes if-else command "if ( is.null(eventattributevar) ) {}else{}"
-      
-    }else if ( is.null(eventattributevar) ) { #closes if-is.null(eventtypevar)-command 
-      ## all the functions that include a type variable (and no attribute): 
-      if ( length(eventtypevalue) == 1 ){
-        ## (5) with eventtypevar set to "valuematch"
-        if ( eventtypevalue == "valuematch" ){
-          result <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", placeholder, "1", "1", xlog, "d-typematch")  	
-          ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-          if ( returnData == TRUE ) {
-            ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-            ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-            data <- cbind(data, result)
-            names(data)[length(data)] <- paste(variablename, "type", "match", sep = ".") #deparse(substitute(eventtypevar))
-            ## return the data frame with the variable bound to it
-            return(data)
-          }else{ 
-            ## only return the 1 degree variable that was generated
-            return(result)
-          }	
-        }  else if ( eventtypevalue != "valuemix" ) {
-          ## (6) with only 1 eventtypevar selected (used as filter)
-          result <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", placeholder, "1", "1", xlog, "d-typefilter")  	
-          ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-          if ( returnData == TRUE ) {
-            ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-            ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-            data <- cbind(data, result)
-            names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventtypevar))
-            ## return the data frame with the variable bound to it
-            return(data)
-          }else{ 
-            ## only return the 1 degree variable that was generated
-            return(result)
-          }	
-        } else if ( eventtypevalue == "valuemix"){
-          ## (7) with more than one eventtypevalue selected (or all of them = nodemix)
-          for (i in unique(eventtypevar)){
-            for (j in unique(eventtypevar)){
-              if ( i != j ){
-                ## calculate degree for the two distinct attribute-values
-                temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, placeholder, "1", "1", xlog, "d-typemix")  	
-                data.short <- cbind(data.short, temp)
-                names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                               gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                               gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                               sep = ".")
-              }										
-            }#closes j-loop
-            ## calculate degree for the attribute-values where i and j are the same (both i used)
-            temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i, placeholder, "1", "1", xlog, "d-typemix")		
-            ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-            data.short <- cbind(data.short, temp)
-            names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                           gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                           gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                           sep = ".")
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }	
-        }
-      }else if ( length(eventtypevalue) > 1 ) {
-        ## (4) with specific eventattributevalues selected
-        for (i in eventtypevalue ){
-          for (j in eventtypevalue ){
-            if ( i != j ){
-              ## calculate degree for the two distinct attribute-values
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j , placeholder, "1", "1", xlog, "d-attributemix")  	
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
+            ## create vector of times, sender--target tie was made before
+            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                        time < time[i] & countingProcessVar == 1 &
+                                        eventfiltervar == eventfiltervalue & 
+                                        eventtypevar == eventtypevar[i]]
+            ## get weight
+            if(is.null(weight)){
+              weightInertiaPast <- rep(1, length(timesIntertiaPast))
+            }else{
+              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventfiltervar == eventfiltervalue & 
+                                            eventtypevar == eventtypevar[i]]
             }
-          }#closes j-loop
-          ## calculate degree for the attribute-values where i and j are the same (both i used)
-          temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i , placeholder, "1", "1", xlog, "d-attributemix")  	
-          ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-          data.short <- cbind(data.short, temp)
+            
+            ## run cpp-loop for all times
+            result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                              weightInertiaPast) 
+            ## rbind the variable:
+            result 
+          }# closes foreach-loop
+          
+          ## transform result variable
+          result <- as.numeric(as.character(res))
+          
+        }else{ # run in standard form
+          
+          if(isTRUE(showprogressbar)){
+            pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+          }
+          for(i in 1:length(degreevar)){
+            if(isTRUE(showprogressbar)){
+              setTxtProgressBar(pb, i)
+            }
+            
+            
+            ## create vector of times, sender--target tie was made before
+            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                        time < time[i] & countingProcessVar == 1 &
+                                        eventfiltervar == eventfiltervalue & 
+                                        eventtypevar == eventtypevar[i]]
+            ## get weight
+            if(is.null(weight)){
+              weightInertiaPast <- rep(1, length(timesIntertiaPast))
+            }else{
+              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventfiltervar == eventfiltervalue &
+                                            eventtypevar == eventtypevar[i]]
+            }
+            
+            ## run cpp-loop for all times
+            result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                 weightInertiaPast) 
+            
+          } #closes i-loop
+        } # closes if no parallel
+        
+        ## return results
+        ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
+        if ( returnData == TRUE ) {
+          ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
+          data <- cbind(data, result)
+          names(data)[length(data)] <- paste(variablename, "typematch.filtered", sep = ".")
+          ## return the data frame with the variable bound to it
+          return(data)
+        }else{ 
+          ## only return the 1 inertia variable that was generated
+          return(result)
+        }
+        ################ done (4)
+        
+      }
+      
+    }else{
+      ## create unique values - either for a valuemix variable or a eventtypevalues variable
+      if(eventtypevalue == 'valuemix'){
+        uniqueEventTypeValues <- unique(eventtypevar)
+      }else{
+        uniqueEventTypeValues <- eventtypevalue
+      }
+      
+      if ( is.null(eventfiltervar) ) {
+        ## (5) valuemix/values provided, no filter
+        
+        for (a in uniqueEventTypeValues){ #current event type
+          for (b in uniqueEventTypeValues){ #past event type
+            if ( a != b ){
+              
+              # run in parallel?
+              if(isTRUE(inParallel)){
+                
+                ##
+                doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+                res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+                  
+                  ## 
+                  if (eventtypevar[i] == a){
+                    
+                    ## create vector of times, sender--target tie was made before
+                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 & 
+                                                eventtypevar == b]
+                    ## get weight
+                    if(is.null(weight)){
+                      weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                    }else{
+                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                    time < time[i] & countingProcessVar == 1 &
+                                                    eventtypevar == b]
+                    }
+                    
+                    ## run cpp-loop for all times
+                    result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                      weightInertiaPast) 
+                  }else{
+                    result <- 0
+                  }
+                  ## rbind the variable:
+                  result 
+                }# closes foreach-loop
+                
+                ## transform result variable
+                result <- as.numeric(as.character(res))
+                
+              }else{ # run in standard form
+                
+                if(isTRUE(showprogressbar)){
+                  pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+                }
+                for(i in 1:length(degreevar)){
+                  if(isTRUE(showprogressbar)){
+                    setTxtProgressBar(pb, i)
+                  }
+                  
+                  ##
+                  if(eventtypevar[i] == a){
+                    
+                    
+                    ## create vector of times, sender--target tie was made before
+                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == b]
+                    ## get weight
+                    if(is.null(weight)){
+                      weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                    }else{
+                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                    time < time[i] & countingProcessVar == 1 &
+                                                    eventtypevar == b]
+                    }
+                    
+                    ## run cpp-loop for all times
+                    result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                         weightInertiaPast) 
+                  }else{ #if eventtypevar != a
+                    result[i] <- 0
+                  }
+                  
+                } #closes i-loop
+              } # closes if no parallel
+              
+              ##
+              data.short <- cbind(data.short, result)
+              
+              ## change the name of the data.short's last column
+              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
+                                                             gsub(" ", "", a, fixed = TRUE), #represents current event-actor type
+                                                             gsub(" ", "", b, fixed = TRUE), #represents actor type of past actions
+                                                             sep = ".")									
+            }
+          } # closes b-loop
+          
+          ## calculate effect where both events are of the same type (both a)
+          # run in parallel?
+          if(isTRUE(inParallel)){
+            
+            ##
+            doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+            res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+              
+              ## 
+              if (eventtypevar[i] == a){
+                
+                ## create vector of times, sender--target tie was made before
+                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == a]
+                ## get weight
+                if(is.null(weight)){
+                  weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                }else{
+                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == a]
+                }
+                
+                ## run cpp-loop for all times
+                result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                  weightInertiaPast) 
+              }else{
+                result <- 0
+              }
+              ## rbind the variable:
+              result 
+            }# closes foreach-loop
+            
+            ## transform result variable
+            result <- as.numeric(as.character(res))
+            
+          }else{ # run in standard form
+            
+            if(isTRUE(showprogressbar)){
+              pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+            }
+            for(i in 1:length(degreevar)){
+              if(isTRUE(showprogressbar)){
+                setTxtProgressBar(pb, i)
+              }
+              
+              ##
+              if( eventtypevar[i] == a){
+                
+                
+                ## create vector of times, sender--target tie was made before
+                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == a]
+                ## get weight
+                if(is.null(weight)){
+                  weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                }else{
+                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == a]
+                }
+                
+                ## run cpp-loop for all times
+                result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                     weightInertiaPast) 
+                
+              }else{
+                result[i] <- 0
+              }
+              
+            } #closes i-loop
+          } # closes if no parallel
+          
+          ##
+          data.short <- cbind(data.short, result)
+          
+          ## change the name of the data.short's last column
           names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
-                                                         gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                         gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                         sep = ".")
-        }#closes i-loop
+                                                         gsub(" ", "", a, fixed = TRUE), #represents current event-actor type
+                                                         gsub(" ", "", a, fixed = TRUE), #represents actor type of past actions
+                                                         sep = ".")	
+          
+        } # closes a-loop
+        
+        ## return data
         ## return data frames
         if ( returnData == TRUE ) {
           data <- cbind(data, data.short)
@@ -1239,677 +1576,194 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
         }else{
           return(data.short)
         }
-      } #closes if ( length(eventtypevalue) > 1 ) {}
-    } #closes if ( is.null(eventattributevar) ) {}
-    
-    ## if both eventtypevar and eventattributevar are selected:
-    if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
-      ## all the functions that include both a type variable as well as an attribute variable
-      if ( length(eventtypevalue) == 1 ){
-        if ( length(eventattributevalue) == 1){
-          ## (8) with typevar = valuematch and attributevar = valuematch
-          if ( eventtypevalue == "valuematch" & eventattributevalue == "valuematch") {
-            result <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, "1", "1", xlog, "d-typematch-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", "match", "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          }
-          
-          ## (9) with typevar = 1 value selected and attributevar = valuematch
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue == "valuematch"){
-            result <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, "1", "1", xlog, "d-typefilter-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (10) with typevar = valuematch and attributevar = 1 value selected
-          if ( eventtypevalue == "valuematch" & eventattributevalue != "valuemix" & eventattributevalue != "valuematch"){
-            result <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, eventattributevalue, "1", xlog, "d-typematch-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", "match", "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (11) with typevar = 1 value selected and attributevar = 1 value selected
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            result <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, eventattributevalue, "1", xlog, "d-typefilter-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (12-1) with typevar = valuematch and attributevar = valuemix
-          if ( eventtypevalue == "valuematch" & eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, i, j, xlog, "d-typematch-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, i, i, xlog, "d-typematch-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (13-1) with typevar = 1 value selected and attributevar = valuemix
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, i, j, xlog, "d-typefilter-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, i, i, xlog, "d-typefilter-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (14-1) with typevar = valuemix and attributevar = valuematch   
-          if ( eventtypevalue == "valuemix" & eventattributevalue == "valuematch"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", "match",
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", "match",
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (15-1) with typevar = valuemix and attributevar = 1 value selected
-          if ( eventtypevalue == "valuemix" & eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", eventattributevalue,
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", eventattributevalue,
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-1) with typevar = valuemix and attributevar = valuemix
-          if ( eventtypevalue == "valuemix" & eventattributevalue == "valuemix"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                for (k in unique(eventattributevar)){
-                  for (l in unique(eventattributevar)){
-                    temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        }else{ #else length(eventattributevalue) > 2
-          
-          ## (12-2) with typevar = valuematch and attributevar = valuemix
-          if ( eventtypevalue == "valuematch" ){
-            for ( i in eventattributevalue ){
-              for ( j in eventattributevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, i, j, xlog, "d-typematch-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, "1", "1", eventattributevar, i, i, xlog, "d-typematch-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (13-2) with typevar = 1 value selected and attributevar = valuemix
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" ){
-            for (i in eventattributevalue ){
-              for (j in eventattributevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, i, j, xlog, "d-typefilter-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, eventtypevalue, "1", eventattributevar, i, i, xlog, "d-typefilter-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-2) with typevar = valuemix and attributevar = valuemix (values)
-          if ( eventtypevalue == "valuemix"){
-            for ( i in unique(eventtypevar) ){
-              for ( j in unique(eventtypevar) ){
-                for ( k in eventattributevalue ){
-                  for ( l in eventattributevalue ){
-                    temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        } #closes else{length(eventattributevalue) >2 }
-      }else{ #else: length(eventtypevalue) > 1:
-        if ( length(eventattributevalue) == 1) {
-          
-          ## (14-2) with typevar = valuemix (values) and attributevar = valuematch   
-          if ( eventattributevalue == "valuematch"){
-            for ( i in eventtypevalue ){
-              for ( j in eventtypevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", "match",
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", "match",
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (15-2) with typevar = valuemix (values) and attributevar = 1 value selected
-          if ( eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            for ( i in eventtypevalue ){
-              for ( j in eventtypevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", eventattributevalue,
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, i, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", eventattributevalue,
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-2) with typevar = valuemix (values) and attributevar = valuemix
-          if ( eventattributevalue == "valuemix"){
-            for (i in eventtypevalue ){
-              for (j in eventtypevalue ){
-                for (k in unique(eventattributevar)){
-                  for (l in unique(eventattributevar)){
-                    temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        }else{ #else: length(eventattributevalue) > 1
-          
-          ## (16-2) with typevar = valuemix (values) and attributevar = valuemix (values)
-          for ( i in eventtypevalue ){
-            for ( j in eventtypevalue ){
-              for ( k in eventattributevalue ){
-                for ( l in eventattributevalue ){
-                  temp <- degreeCpp(time, weight, degreevar, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                  #TODO: do not allow duplicate entries
-                }#closes l-loop	
-              }#closes k-loop
-            }#closes j-loop
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }
-        }#closes else{length(eventattributevalue) > 1}		
-      }#closes if-else "( length(eventtypevalue) == 1 ){}"
-    }#closes -if both eventtypevar and eventattributevar are selected
-  }else{ #else: degree.on.other.var is specified
-    
-    ##
-    variablename <- "degree.other.var"
-    ##
-    if ( is.null(eventtypevar) ) {
-      if ( is.null(eventattributevar) ) {
-        ## (1) start off with simple degree function: no type, no attribute
-        result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", placeholder, "1", "1", xlog, "d-only")		
-        ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-        if ( returnData == TRUE ) {
-          ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-          data <- cbind(data, result)
-          names(data)[length(data)] <- variablename
-          ## return the data frame with the variable bound to it
-          return(data)
-        }else{ 
-          ## only return the 1 degree variable that was generated
-          return(result)
-        }
+        ################ done (5)
+        
       }else{
-        ## all the functions with event attribute variable but no type variable:
-        if ( length(eventattributevalue) == 1 ){
-          if ( eventattributevalue == "valuematch" ){
-            ## (2) with eventattributevalue set to "valuematch"
-            result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, "1", "1", xlog, "d-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
+        ################ (6) valuemix/values provided, with filter 
+        
+        for (a in uniqueEventTypeValues){ #current event type
+          for (b in uniqueEventTypeValues){ #past event type
+            if ( a != b ){
               
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          } else if ( eventattributevalue != "valuemix" ) {
-            ## (3) with one eventattirbutevalue selected (and used as filter)
-            result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, eventattributevalue, "1", xlog, "d-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          } else if ( eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, i, j, xlog, "d-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")									
+              # run in parallel?
+              if(isTRUE(inParallel)){
+                
+                ##
+                doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+                res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+                  
+                  ## 
+                  if (eventtypevar[i] == a){
+                    
+                    ## create vector of times, degreevar--target tie was made before
+                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 & 
+                                                eventtypevar == b  & 
+                                                eventfiltervar == eventfiltervalue]
+                    ## get weight
+                    if(is.null(weight)){
+                      weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                    }else{
+                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                    time < time[i] & countingProcessVar == 1 &
+                                                    eventtypevar == b & 
+                                                    eventfiltervar == eventfiltervalue]
+                    }
+                    
+                    ## run cpp-loop for all times
+                    result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                      weightInertiaPast) 
+                  }else{
+                    result <- 0
+                  }
+                  ## rbind the variable:
+                  result 
+                }# closes foreach-loop
+                
+                ## transform result variable
+                result <- as.numeric(as.character(res))
+                
+              }else{ # run in standard form
+                
+                if(isTRUE(showprogressbar)){
+                  pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
                 }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, i, i, xlog, "d-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter? now it only filter!)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
+                for(i in 1:length(degreevar)){
+                  if(isTRUE(showprogressbar)){
+                    setTxtProgressBar(pb, i)
+                  }
+                  
+                  ##
+                  if(eventtypevar[i] == a){
+                    
+                    
+                    ## create vector of times, sender--target tie was made before
+                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == b & 
+                                                eventfiltervar == eventfiltervalue]
+                    ## get weight
+                    if(is.null(weight)){
+                      weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                    }else{
+                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                    time < time[i] & countingProcessVar == 1 &
+                                                    eventtypevar == b & 
+                                                    eventfiltervar == eventfiltervalue]
+                    }
+                    
+                    ## run cpp-loop for all times
+                    result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                         weightInertiaPast) 
+                  }else{ #if eventtypevar != a
+                    result[i] <- 0
+                  }
+                  
+                } #closes i-loop
+              } # closes if no parallel
               
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }	
-          }
-        } else if ( length(eventattributevalue) > 1 ) {
-          ## (4) with specific eventattributevalues selected
-          for (i in eventattributevalue){
-            for (j in eventattributevalue){
-              if ( i != j ){
-                ## calculate degree for the two distinct attribute-values
-                temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, i, j, xlog, "d-attributemix")		
-                data.short <- cbind(data.short, temp)
-                names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                               gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                               gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                               sep = ".")
-              }
-            }#closes j-loop
-            ## calculate degree for the attribute-values where i and j are the same (both i used)
-            temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, placeholder, "1", "1", eventattributevar, i, i, xlog, "d-attributemix")		
-            ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-            data.short <- cbind(data.short, temp)
-            names(data.short)[length(data.short)] <- paste(variablename, "attr", #deparse(substitute(eventattributevar))
-                                                           gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                           gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                           sep = ".")
-            
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }
-        } #closes if ( length(eventattributevalue) > 1 ) 
-      } #closes if-else command "if ( is.null(eventattributevar) ) {}else{}"
-      
-    }else if ( is.null(eventattributevar) ) { #closes if-is.null(eventtypevar)-command 
-      ## all the functions that include a type variable (and no attribute): 
-      if ( length(eventtypevalue) == 1 ){
-        ## (5) with eventtypevar set to "valuematch"
-        if ( eventtypevalue == "valuematch" ){
-          result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, "1", "1", placeholder, "1", "1", xlog, "d-typematch")  	
-          ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-          if ( returnData == TRUE ) {
-            ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-            ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-            data <- cbind(data, result)
-            names(data)[length(data)] <- paste(variablename, "type", "match", sep = ".") #deparse(substitute(eventtypevar))
-            ## return the data frame with the variable bound to it
-            return(data)
-          }else{ 
-            ## only return the 1 degree variable that was generated
-            return(result)
-          }	
-        }  else if ( eventtypevalue != "valuemix" ) {
-          ## (6) with only 1 eventtypevar selected (used as filter)
-          result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", placeholder, "1", "1", xlog, "d-typefilter")  	
-          ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-          if ( returnData == TRUE ) {
-            ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-            ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-            data <- cbind(data, result)
-            names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventtypevar))
-            ## return the data frame with the variable bound to it
-            return(data)
-          }else{ 
-            ## only return the 1 degree variable that was generated
-            return(result)
-          }	
-        } else if ( eventtypevalue == "valuemix"){
-          ## (7) with more than one eventtypevalue selected (or all of them = nodemix)
-          for (i in unique(eventtypevar)){
-            for (j in unique(eventtypevar)){
-              if ( i != j ){
-                ## calculate degree for the two distinct attribute-values
-                temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, placeholder, "1", "1", xlog, "d-typemix")  	
-                data.short <- cbind(data.short, temp)
-                names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                               gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                               gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                               sep = ".")
-              }										
-            }#closes j-loop
-            ## calculate degree for the attribute-values where i and j are the same (both i used)
-            temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i, placeholder, "1", "1", xlog, "d-typemix")		
-            ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-            data.short <- cbind(data.short, temp)
-            names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                           gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                           gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                           sep = ".")
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }	
-        }
-      }else if ( length(eventtypevalue) > 1 ) {
-        ## (4) with specific eventattributevalues selected
-        for (i in eventtypevalue ){
-          for (j in eventtypevalue ){
-            if ( i != j ){
-              ## calculate degree for the two distinct attribute-values
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j , placeholder, "1", "1", xlog, "d-attributemix")  	
-              data.short <- cbind(data.short, temp)
+              ##
+              data.short <- cbind(data.short, result)
+              
+              ## change the name of the data.short's last column
               names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
+                                                             gsub(" ", "", a, fixed = TRUE), #represents current event-actor type
+                                                             gsub(" ", "", b, fixed = TRUE), #represents actor type of past actions
+                                                             sep = ".")									
             }
-          }#closes j-loop
-          ## calculate degree for the attribute-values where i and j are the same (both i used)
-          temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i , placeholder, "1", "1", xlog, "d-attributemix")  	
-          ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-          data.short <- cbind(data.short, temp)
+          } # closes b-loop
+          
+          ## calculate effect where both events are of the same type (both a)
+          # run in parallel?
+          if(isTRUE(inParallel)){
+            
+            ##
+            doParallel::registerDoParallel(cluster) #necessary for the foreach-loop to work, cl <- makeCluster(12, type="FORK")
+            res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
+              
+              ## 
+              if (eventtypevar[i] == a){
+                
+                ## create vector of times, degreevar--target tie was made before
+                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == a & 
+                                            eventfiltervar == eventfiltervalue]
+                ## get weight
+                if(is.null(weight)){
+                  weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                }else{
+                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == a & 
+                                                eventfiltervar == eventfiltervalue]
+                }
+                
+                ## run cpp-loop for all times
+                result <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                  weightInertiaPast) 
+              }else{
+                result <- 0
+              }
+              ## rbind the variable:
+              result 
+            }# closes foreach-loop
+            
+            ## transform result variable
+            result <- as.numeric(as.character(res))
+            
+          }else{ # run in standard form
+            
+            if(isTRUE(showprogressbar)){
+              pb <- txtProgressBar(min = 1, max = length(degreevar), style = 3)
+            }
+            for(i in 1:length(degreevar)){
+              if(isTRUE(showprogressbar)){
+                setTxtProgressBar(pb, i)
+              }
+              
+              ##
+              if( eventtypevar[i] == a){
+                
+                
+                ## create vector of times, degreevar--target tie was made before
+                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            time < time[i] & countingProcessVar == 1 &
+                                            eventtypevar == a & 
+                                            eventfiltervar == eventfiltervalue]
+                ## get weight
+                if(is.null(weight)){
+                  weightInertiaPast <- rep(1, length(timesIntertiaPast))
+                }else{
+                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                time < time[i] & countingProcessVar == 1 &
+                                                eventtypevar == a & 
+                                                eventfiltervar == eventfiltervalue]
+                }
+                
+                ## run cpp-loop for all times
+                result[i] <- weightTimesSummationCpp(timesIntertiaPast, xlog, time[i], 
+                                                     weightInertiaPast) 
+                
+              }else{
+                result[i] <- 0
+              }
+              
+            } #closes i-loop
+          } # closes if no parallel
+          
+          ##
+          data.short <- cbind(data.short, result)
+          
+          ## change the name of the data.short's last column
           names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventattributevar))
-                                                         gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                         gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                         sep = ".")
-        }#closes i-loop
+                                                         gsub(" ", "", a, fixed = TRUE), #represents current event-actor type
+                                                         gsub(" ", "", a, fixed = TRUE), #represents actor type of past actions
+                                                         sep = ".")	
+          
+        } # closes a-loop
+        
+        ## return data
         ## return data frames
         if ( returnData == TRUE ) {
           data <- cbind(data, data.short)
@@ -1917,472 +1771,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
         }else{
           return(data.short)
         }
-      } #closes if ( length(eventtypevalue) > 1 ) {}
-    } #closes if ( is.null(eventattributevar) ) {}
-    
-    ## if both eventtypevar and eventattributevar are selected:
-    if ( is.null(eventtypevar) == FALSE & is.null(eventattributevar) == FALSE ){
-      ## all the functions that include both a type variable as well as an attribute variable
-      if ( length(eventtypevalue) == 1 ){
-        if ( length(eventattributevalue) == 1){
-          ## (8) with typevar = valuematch and attributevar = valuematch
-          if ( eventtypevalue == "valuematch" & eventattributevalue == "valuematch") {
-            result <- degreeOneModeCpp(time, weight, degreevar,  degree.on.other.var, eventtypevar, "1", "1", eventattributevar, "1", "1", xlog, "d-typematch-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", "match", "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }	
-          }
-          
-          ## (9) with typevar = 1 value selected and attributevar = valuematch
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue == "valuematch"){
-            result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, "1", "1", xlog, "d-typefilter-attributematch")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), "attr", "match", sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (10) with typevar = valuematch and attributevar = 1 value selected
-          if ( eventtypevalue == "valuematch" & eventattributevalue != "valuemix" & eventattributevalue != "valuematch"){
-            result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, "1", "1", eventattributevar, eventattributevalue, "1", xlog, "d-typematch-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", "match", "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (11) with typevar = 1 value selected and attributevar = 1 value selected
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            result <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, eventattributevalue, "1", xlog, "d-typefilter-attributefilter")		
-            ## if returnData = TRUE => return the entire data frame as well as the 1 additional degree-variable
-            if ( returnData == TRUE ) {
-              ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
-              ##TODO: also figure out the deparse(substitute(eventattributevar)) problem so that var-name can be used in varname
-              data <- cbind(data, result)
-              names(data)[length(data)] <- paste(variablename, "type", gsub(" ", "", eventtypevalue, fixed = TRUE), "attr", gsub(" ", "", eventattributevalue, fixed = TRUE), sep = ".") #deparse(substitute(eventattributevar))
-              ## return the data frame with the variable bound to it
-              return(data)
-            }else{ 
-              ## only return the 1 degree variable that was generated
-              return(result)
-            }
-          }
-          
-          ## (12-1) with typevar = valuematch and attributevar = valuemix
-          if ( eventtypevalue == "valuematch" & eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, "1", "1", eventattributevar, i, j, xlog, "d-typematch-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, "1", "1", eventattributevar, i, i, xlog, "d-typematch-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (13-1) with typevar = 1 value selected and attributevar = valuemix
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" & eventattributevalue == "valuemix"){
-            for (i in unique(eventattributevar)){
-              for (j in unique(eventattributevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, i, j, xlog, "d-typefilter-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, i, i, xlog, "d-typefilter-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (14-1) with typevar = valuemix and attributevar = valuematch   
-          if ( eventtypevalue == "valuemix" & eventattributevalue == "valuematch"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", "match",
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", "match",
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (15-1) with typevar = valuemix and attributevar = 1 value selected
-          if ( eventtypevalue == "valuemix" & eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", eventattributevalue,
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", eventattributevalue,
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-1) with typevar = valuemix and attributevar = valuemix
-          if ( eventtypevalue == "valuemix" & eventattributevalue == "valuemix"){
-            for (i in unique(eventtypevar)){
-              for (j in unique(eventtypevar)){
-                for (k in unique(eventattributevar)){
-                  for (l in unique(eventattributevar)){
-                    temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        }else{ #else length(eventattributevalue) > 2
-          
-          ## (12-2) with typevar = valuematch and attributevar = valuemix
-          if ( eventtypevalue == "valuematch" ){
-            for ( i in eventattributevalue ){
-              for ( j in eventattributevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar,  degree.on.other.var, eventtypevar, "1", "1", eventattributevar, i, j, xlog, "d-typematch-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, "1", "1", eventattributevar, i, i, xlog, "d-typematch-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", "match", "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (13-2) with typevar = 1 value selected and attributevar = valuemix
-          if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" ){
-            for (i in eventattributevalue ){
-              for (j in eventattributevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, i, j, xlog, "d-typefilter-attributemix")		
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, eventtypevalue, "1", eventattributevar, i, i, xlog, "d-typefilter-attributemix")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", eventtypevalue, "attr", #deparse(substitute(eventattributevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-2) with typevar = valuemix and attributevar = valuemix (values)
-          if ( eventtypevalue == "valuemix"){
-            for ( i in unique(eventtypevar) ){
-              for ( j in unique(eventtypevar) ){
-                for ( k in eventattributevalue ){
-                  for ( l in eventattributevalue ){
-                    temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        } #closes else{length(eventattributevalue) >2 }
-      }else{ #else: length(eventtypevalue) > 1:
-        if ( length(eventattributevalue) == 1) {
-          
-          ## (14-2) with typevar = valuemix (values) and attributevar = valuematch   
-          if ( eventattributevalue == "valuematch"){
-            for ( i in eventtypevalue ){
-              for ( j in eventtypevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", "match",
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i, eventattributevar, "1", "1", xlog, "d-typemix-attributematch")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", "match",
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (15-2) with typevar = valuemix (values) and attributevar = 1 value selected
-          if ( eventattributevalue != "valuematch" & eventattributevalue != "valuemix"){
-            for ( i in eventtypevalue ){
-              for ( j in eventtypevalue ){
-                if ( i != j ){
-                  ## calculate degree for the two distinct attribute-values
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", eventattributevalue,
-                                                                 sep = ".")
-                }
-              }#closes j-loop
-              ## calculate degree for the attribute-values where i and j are the same (both i used)
-              temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, i, eventattributevar, eventattributevalue, "1", xlog, "d-typemix-attributefilter")		
-              ##TODO: calculate one effect each for a filtered-variable (not just match, but also filter?)
-              data.short <- cbind(data.short, temp)
-              names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                             gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                             gsub(" ", "", i, fixed = TRUE), #represents actor type of past actions
-                                                             "attr", eventattributevalue,
-                                                             sep = ".")
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-          ## (16-2) with typevar = valuemix (values) and attributevar = valuemix
-          if ( eventattributevalue == "valuemix"){
-            for (i in eventtypevalue ){
-              for (j in eventtypevalue ){
-                for (k in unique(eventattributevar)){
-                  for (l in unique(eventattributevar)){
-                    temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                    data.short <- cbind(data.short, temp)
-                    names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                   "attr", #deparse(substitute(eventtypevar))
-                                                                   gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                   gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                   sep = ".")
-                    #TODO: do not allow duplicate entries
-                  }#closes l-loop	
-                }#closes k-loop
-              }#closes j-loop
-            }#closes i-loop
-            ## return data frames
-            if ( returnData == TRUE ) {
-              data <- cbind(data, data.short)
-              return(data)
-            }else{
-              return(data.short)
-            }
-          }
-          
-        }else{ #else: length(eventattributevalue) > 1
-          
-          ## (16-2) with typevar = valuemix (values) and attributevar = valuemix (values)
-          for ( i in eventtypevalue ){
-            for ( j in eventtypevalue ){
-              for ( k in eventattributevalue ){
-                for ( l in eventattributevalue ){
-                  temp <- degreeOneModeCpp(time, weight, degreevar, degree.on.other.var, eventtypevar, i, j, eventattributevar, k, l, xlog, "d-typemix-attributemix")  	
-                  data.short <- cbind(data.short, temp)
-                  names(data.short)[length(data.short)] <- paste(variablename, "type", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", i, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", j, fixed = TRUE), #represents actor type of past actions
-                                                                 "attr", #deparse(substitute(eventtypevar))
-                                                                 gsub(" ", "", k, fixed = TRUE), #represents current event-actor type
-                                                                 gsub(" ", "", l, fixed = TRUE), #represents actor type of past actions
-                                                                 sep = ".")
-                  #TODO: do not allow duplicate entries
-                }#closes l-loop	
-              }#closes k-loop
-            }#closes j-loop
-          }#closes i-loop
-          ## return data frames
-          if ( returnData == TRUE ) {
-            data <- cbind(data, data.short)
-            return(data)
-          }else{
-            return(data.short)
-          }
-        }#closes else{length(eventattributevalue) > 1}		
-      }#closes if-else "( length(eventtypevalue) == 1 ){}"
-    }#closes -if both eventtypevar and eventattributevar are selected
-  }#closes -if  degree.on.other.var == NULL
+        
+        ################ done (6)
+      } 
+      
+    } # closes eventtypevalues provided/valuemix 
+  } #closes if-eventtypevar != NULL
 }
+
 
 ################################################################################
 ##	FourCycle calculation

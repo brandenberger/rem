@@ -1,8 +1,11 @@
 useDynLib(rem)
 import("flexsurv")
 import("survival")
+import("doParallel")
+import("foreach")
 importFrom("Rcpp", evalCpp)
 importFrom("stats", "as.formula")
+importFrom("utils", "setTxtProgressBar", "txtProgressBar")
 # export all functions -> exportPattern("^[[:alpha:]]+") -> or: exportPattern("^[^\\.]")
 # since there are cpp-functions included, they would be exported as well, therefore, only the R-functions are exported
 export("degreeStat")

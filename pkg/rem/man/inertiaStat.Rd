@@ -95,65 +95,6 @@ Laurence Brandenberger \email{laurence.brandenberger@eawag.ch}
 \link{rem-package}
 }
 \examples{
-# create some data with 'sender', 'target' and a 'time'-variable
-# (Note: Data used here are random events from the Correlates of War Project)
-sender <- c('TUN', 'NIR', 'NIR', 'TUR', 'TUR', 'USA', 'URU', 
-            'IRQ', 'MOR', 'BEL', 'EEC', 'USA', 'IRN', 'IRN', 
-            'USA', 'AFG', 'ETH', 'USA', 'SAU', 'IRN', 'IRN',
-            'ROM', 'USA', 'USA', 'PAN', 'USA', 'USA', 'YEM', 
-            'SYR', 'AFG', 'NAT', 'NAT', 'USA')
-target <- c('BNG', 'ZAM', 'JAM', 'SAU', 'MOM', 'CHN', 'IRQ', 
-            'AFG', 'AFG', 'EEC', 'BEL', 'ITA', 'RUS', 'UNK',
-            'IRN', 'RUS', 'AFG', 'ISR', 'ARB', 'USA', 'USA',
-            'USA', 'AFG', 'IRN', 'IRN', 'IRN', 'AFG', 'PAL',
-            'ARB', 'USA', 'EEC', 'BEL', 'PAK')
-time <- c('800107', '800107', '800107', '800109', '800109', 
-          '800109', '800111', '800111', '800111', '800113',
-          '800113', '800113', '800114', '800114', '800114', 
-          '800116', '800116', '800116', '800119', '800119',
-          '800119', '800122', '800122', '800122', '800124', 
-          '800125', '800125', '800127', '800127', '800127', 
-          '800204', '800204', '800204')
-type <- sample(c('cooperation', 'conflict'), 33,
-               replace = TRUE)
-
-# combine them into a data.frame
-dt <- data.frame(sender, target, time, type)
-
-# create event sequence and order the data
-dt <- eventSequence(datevar = dt$time, dateformat = '\%y\%m\%d', 
-                    data = dt, type = 'continuous', 
-                    byTime = "daily", returnData = TRUE,
-                    sortData = TRUE)
-
-# calculate inertia statistics
-dt$inertia <- inertiaStat(data = dt, time = dt$event.seq.cont, 
-                          sender = dt$sender, target = dt$target, 
-                          halflife = 2, returnData = FALSE)
-
-# plot inertia over time
-library('ggplot2')
-ggplot(dt, aes ( event.seq.cont, inertia) ) +
-  geom_point()+ geom_smooth() 
-
-# inertia with typematch (e.g. for 'cooperation' events only 
-# count past 'cooperation' events)             
-dt$inertia.tm <- inertiaStat(data = dt, 
-                             time = dt$event.seq.cont, 
-                             sender = dt$sender, 
-                             target = dt$target, 
-                             halflife = 2, 
-                             eventtypevar = dt$type, 
-                             eventtypevalue = 'valuematch',
-                             returnData = FALSE)
-
-# inertia with valuemix: for each combination of types
-# in the eventtypevar, create a variable
-dt <- inertiaStat(data = dt, time = dt$event.seq.cont, 
-                  sender = dt$sender, target = dt$target, 
-                  halflife = 2, eventtypevar = dt$type, 
-                  eventtypevalue = 'valuemix',
-                  returnData = TRUE)
 }
 %\keyword{key}
 

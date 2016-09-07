@@ -37,6 +37,10 @@ triadCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, att
     .Call('rem_triadCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
 }
 
+weightTimesSummationCpp <- function(pastSenderTimes, xlog, currentTime, weightvar) {
+    .Call('rem_weightTimesSummationCpp', PACKAGE = 'rem', pastSenderTimes, xlog, currentTime, weightvar)
+}
+
 absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, weightvar, eventattributevar, eventattribute, xlog) {
     .Call('rem_absoluteDiffAverageWeightEventAttributeCpp', PACKAGE = 'rem', sender, target, time, weightvar, eventattributevar, eventattribute, xlog)
 }

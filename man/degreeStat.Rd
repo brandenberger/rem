@@ -41,7 +41,7 @@ degreeStat(data, time, degreevar, halflife,
 
 \item{eventfiltervalue}{ An optional character string that represents the value for which past events should be filtered. To filter the current events, use \code{eventtypevar}.}
 
-\item{eventvar}{ An (optional) dummy variable with 0 values for null-events and 1 values for true events. If the \code{data} is in the form of counting process data, use the \code{eventvar}-option to specify which variable contains the 0/1-dummy for event occurrence. If this variable is not specified, all events in the past will be considered for the calulation of the inertia statistic, regardless if they occurred or not (= are null-events).}
+\item{eventvar}{ An (optional) dummy variable with 0 values for null-events and 1 values for true events. If the \code{data} is in the form of counting process data, use the \code{eventvar}-option to specify which variable contains the 0/1-dummy for event occurrence. If this variable is not specified, all events in the past will be considered for the calulation of the degree statistic, regardless if they occurred or not (= are null-events).}
 
 \item{degreeOnOtherVar}{ A string (or factor or numeric) variable that represents the sender or target of the event. It can be used to calculate target-outdegree or sender-indegree statistics in one-mode networks. For the sender indegree statistic, fill the sender variable into the \code{degreevar} and the target variable into the \code{degree.on.other.var}. For the target-outdegree statistic, fill the target variable into the \code{degreevar} and the sender variable into the \code{degree.on.other.var}.}
 

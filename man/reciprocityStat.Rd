@@ -7,13 +7,15 @@
 \usage{
 reciprocityStat(data, time, sender, target, halflife, 
     weight = NULL, 
-    eventtypevar = NULL, 
+    eventtypevar = NULL,
     eventtypevalue = "valuematch", 
-    eventattributevar = NULL,
-    eventattributevalue = "valuematch", 
-    variablename = "reciprocity",
-    returnData = FALSE, 
-    showprogressbar = FALSE)
+    eventfiltervar = NULL,
+    eventfiltervalue = NULL, 
+    eventvar = NULL,
+    variablename = "recip", 
+    returnData = FALSE,
+    showprogressbar = FALSE, 
+    inParallel = FALSE, cluster = NULL)
 }
 \arguments{
 \item{data}{ A data frame containing all the variables.}
@@ -33,21 +35,24 @@ paste events should be filtered depending on their type.
 calculated. The first variable calculates the reciprocity effect where the present  event is of type "a" and all the past events are of type "b". The next variable calculates reciprocity for present events of type "b" and past events of type "a". Additionally, a variable is calculated, where present events as well as past  events are of type "a" and a fourth variable calculates reciprocity for events with type "b" (i.e. valuematch on value "b").
 \code{eventtypevalue = c(.., ..)}, similar to the "\code{nodmix}"-option, all different combinations of the values specified in \code{eventtypevalue} are used to create reciprocity statistics.
 }
-\item{eventattributevar}{ An optinoal variable that represents an attribute of the event. It can be a sender attribute, a target attribute, time or dyad attribute. Use \code{eventattributevalue} to specify how the \code{eventattributevar} should be used.
-}
-\item{eventattributevalue}{ An optional value (or set of values) used to specify how  past events should be filtered depending on their attribute. Similar to \code{eventtypevalue}.
-\code{eventattributevalue = "valuematch"} indicates that only past events that have the same attribute should be used to calculate the reciprocity statistic.
-\code{eventtypevalue = "valuemix"} indicates that past and present events of 
-specific attributes should be used for the reciprocity statistic. All the possible combinations of the eventattributevar-values will be used. 
-\code{eventtypevalue = c(.., ..)} similar to the "\code{valuemix}"-option, all 
-different combinations of the values specified in \code{eventtypevalue} are used to create reciprocity statistics.}
+\item{eventfiltervar}{ An optional numeric/character/or factor variable for each event. If \code{eventfiltervar} is specified, \code{eventfiltervalue} has to be provided as well.}
+
+\item{eventfiltervalue}{ An optional character string that represents the value for which past events should be filtered. To filter the current events, use \code{eventtypevar}.}
+
+\item{eventvar}{ An optional dummy variable with 0 values for null-events and 1 values for true events. If the \code{data} is in the form of counting process data, use the \code{eventvar}-option to specify which variable contains the 0/1-dummy for event occurrence. If this variable is not specified, all events in the past will be considered for the calulation of the reciprocity statistic, regardless if they occurred or not (= are null-events).}
+
 \item{variablename}{ An optional value (or values) with the name the reciprocity
 statistic variable should be given. To be used if \code{returnData = TRUE} or
 multiple reciprocity statistics are calculated.}
 \item{returnData}{ \code{TRUE/FALSE}. Set to \code{FALSE} by default. The new 
 variable(s) are bound directly to the \code{data.frame} provided and the
 data frame is returned in full.}
-\item{showprogressbar}{\code{TRUE/FALSE}. To be implemented.}
+
+\item{showprogressbar}{ \code{TRUE/FALSE}. Can only be set to TRUE if the function is not run in parallel.}
+
+\item{inParallel}{ \code{TRUE/FALSE}. An optional boolean to specify if the loop should be run in parallel.}
+
+\item{cluster}{ An optional numeric or character value that defines the cluster. By specifying a single number, the cluster option uses the provided number of nodes to parallellize. By specifying a cluster using the \code{makeCluster}-command in the \code{doParallel}-package, the loop can be run on multiple nodes/cores. E.g., \code{cluster = makeCluster(12, type="FORK")}.}
 }
 \details{
 
@@ -89,80 +94,7 @@ Laurence Brandenberger \email{laurence.brandenberger@eawag.ch}
 }
 \examples{
 # create some data with 'sender', 'target' and a 'time'-variable
-# (Note: Data used here are random events from the Correlates of War Project)
-sender <- c('TUN', 'NIR', 'NIR', 'TUR', 'TUR', 'USA', 'URU', 
-            'IRQ', 'MOR', 'BEL', 'EEC', 'USA', 'IRN', 'IRN', 
-            'USA', 'AFG', 'ETH', 'USA', 'SAU', 'IRN', 'IRN',
-            'ROM', 'USA', 'USA', 'PAN', 'USA', 'USA', 'YEM', 
-            'SYR', 'AFG', 'NAT', 'NAT', 'USA')
-target <- c('BNG', 'ZAM', 'JAM', 'SAU', 'MOM', 'CHN', 'IRQ', 
-            'AFG', 'AFG', 'EEC', 'BEL', 'ITA', 'RUS', 'UNK',
-            'IRN', 'RUS', 'AFG', 'ISR', 'ARB', 'USA', 'USA',
-            'USA', 'AFG', 'IRN', 'IRN', 'IRN', 'AFG', 'PAL',
-            'ARB', 'USA', 'EEC', 'BEL', 'PAK')
-time <- c('800107', '800107', '800107', '800109', '800109', 
-          '800109', '800111', '800111', '800111', '800113',
-          '800113', '800113', '800114', '800114', '800114', 
-          '800116', '800116', '800116', '800119', '800119',
-          '800119', '800122', '800122', '800122', '800124', 
-          '800125', '800125', '800127', '800127', '800127', 
-          '800204', '800204', '800204')
-type <- sample(c('cooperation', 'conflict'), 33,
-               replace = TRUE)
-important <- sample(c('important', 'not important'), 33,
-               replace = TRUE)
 
-# combine them into a data.frame
-dt <- data.frame(sender, target, time, type, important)
-
-# create event sequence and order the data
-dt <- eventSequence(datevar = dt$time, dateformat = '\%y\%m\%d', 
-                    data = dt, type = "continuous", 
-                    byTime = 'daily', returnData = TRUE,
-                    sortData = TRUE)
-
-# calculate reciprocity statistic
-dt$recip <- reciprocityStat(data = dt,
-                            time = dt$time, 
-                            sender = dt$sender, 
-                            target = dt$target,
-                            halflife = 2)
-
-# plot sender-outdegree over time
-library('ggplot2')
-ggplot(dt, aes ( event.seq.cont, recip) ) +
-  geom_point()+ geom_smooth() 
-
-# calculate reciprocity statistic with typematch
-# if a cooperated with b in the past, does
-# b cooperate with a now?
-dt$recip.typematch <- reciprocityStat(data = dt,
-                                      time = dt$time, 
-                                      sender = dt$sender, 
-                                      target = dt$target,
-                                      eventtypevar = dt$type,
-                                      eventtypevalue = 'valuematch',
-                                      halflife = 2)
-
-# calculate reciprocity with valuemix on type
-dt <- reciprocityStat(data = dt,
-                      time = dt$time,
-                      sender = dt$sender,
-                      target = dt$target, 
-                      eventtypevar = dt$type,
-                      eventtypevalue = 'valuemix',
-                      halflife = 2, 
-                      variablename = 'recip',
-                      returnData = TRUE)
-
-# calculate reciprocity and count important events only
-dt$recip.im <- reciprocityStat(data = dt,
-                               time = dt$time, 
-                               sender = dt$sender, 
-                               target = dt$target,
-                               eventattributevar = dt$important,
-                               eventattributevalue = 'important',
-                               halflife = 2)
 }
 %\keyword{key}
 

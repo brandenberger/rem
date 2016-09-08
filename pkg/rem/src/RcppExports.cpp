@@ -71,19 +71,21 @@ BEGIN_RCPP
 END_RCPP
 }
 // fourCycleCpp
-NumericVector fourCycleCpp(std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, NumericVector time, NumericVector weightvar, double xlog, std::vector<std::string> attrvarNow, std::string attrNow, std::vector<std::string> attrvarAaj, std::string attrAaj, std::vector<std::string> attrvarBib, std::string attrBib, std::vector<std::string> attrvarCij, std::string attrCij, std::string fourCycleType);
-RcppExport SEXP rem_fourCycleCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP xlogSEXP, SEXP attrvarNowSEXP, SEXP attrNowSEXP, SEXP attrvarAajSEXP, SEXP attrAajSEXP, SEXP attrvarBibSEXP, SEXP attrBibSEXP, SEXP attrvarCijSEXP, SEXP attrCijSEXP, SEXP fourCycleTypeSEXP) {
+double fourCycleCpp(std::vector<std::string> sender, std::string currentSender, std::vector<std::string> target, std::string currentTarget, std::vector<std::string> typevar, std::string currentType, NumericVector time, double currentTime, NumericVector weightvar, double xlog, std::vector<std::string> attrvarAaj, std::string attrAaj, std::vector<std::string> attrvarBib, std::string attrBib, std::vector<std::string> attrvarCij, std::string attrCij, std::string fourCycleType, std::vector<std::string> w, std::vector<std::string> x, size_t i, size_t begin);
+RcppExport SEXP rem_fourCycleCpp(SEXP senderSEXP, SEXP currentSenderSEXP, SEXP targetSEXP, SEXP currentTargetSEXP, SEXP typevarSEXP, SEXP currentTypeSEXP, SEXP timeSEXP, SEXP currentTimeSEXP, SEXP weightvarSEXP, SEXP xlogSEXP, SEXP attrvarAajSEXP, SEXP attrAajSEXP, SEXP attrvarBibSEXP, SEXP attrBibSEXP, SEXP attrvarCijSEXP, SEXP attrCijSEXP, SEXP fourCycleTypeSEXP, SEXP wSEXP, SEXP xSEXP, SEXP iSEXP, SEXP beginSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentSender(currentSenderSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentTarget(currentTargetSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentType(currentTypeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
     Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarNow(attrvarNowSEXP);
-    Rcpp::traits::input_parameter< std::string >::type attrNow(attrNowSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarAaj(attrvarAajSEXP);
     Rcpp::traits::input_parameter< std::string >::type attrAaj(attrAajSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarBib(attrvarBibSEXP);
@@ -91,7 +93,11 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarCij(attrvarCijSEXP);
     Rcpp::traits::input_parameter< std::string >::type attrCij(attrCijSEXP);
     Rcpp::traits::input_parameter< std::string >::type fourCycleType(fourCycleTypeSEXP);
-    __result = Rcpp::wrap(fourCycleCpp(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType));
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type w(wSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type x(xSEXP);
+    Rcpp::traits::input_parameter< size_t >::type i(iSEXP);
+    Rcpp::traits::input_parameter< size_t >::type begin(beginSEXP);
+    __result = Rcpp::wrap(fourCycleCpp(sender, currentSender, target, currentTarget, typevar, currentType, time, currentTime, weightvar, xlog, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType, w, x, i, begin));
     return __result;
 END_RCPP
 }
@@ -254,6 +260,31 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type attrBI(attrBISEXP);
     Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
     __result = Rcpp::wrap(triadOldCpp(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog));
+    return __result;
+END_RCPP
+}
+// fourCycleOldCpp
+NumericVector fourCycleOldCpp(std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, NumericVector time, NumericVector weightvar, double xlog, std::vector<std::string> attrvarNow, std::string attrNow, std::vector<std::string> attrvarAaj, std::string attrAaj, std::vector<std::string> attrvarBib, std::string attrBib, std::vector<std::string> attrvarCij, std::string attrCij, std::string fourCycleType);
+RcppExport SEXP rem_fourCycleOldCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP xlogSEXP, SEXP attrvarNowSEXP, SEXP attrNowSEXP, SEXP attrvarAajSEXP, SEXP attrAajSEXP, SEXP attrvarBibSEXP, SEXP attrBibSEXP, SEXP attrvarCijSEXP, SEXP attrCijSEXP, SEXP fourCycleTypeSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarNow(attrvarNowSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrNow(attrNowSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarAaj(attrvarAajSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrAaj(attrAajSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarBib(attrvarBibSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrBib(attrBibSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvarCij(attrvarCijSEXP);
+    Rcpp::traits::input_parameter< std::string >::type attrCij(attrCijSEXP);
+    Rcpp::traits::input_parameter< std::string >::type fourCycleType(fourCycleTypeSEXP);
+    __result = Rcpp::wrap(fourCycleOldCpp(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType));
     return __result;
 END_RCPP
 }

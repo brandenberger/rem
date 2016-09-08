@@ -13,8 +13,8 @@ degreeOneModeCpp <- function(time, weightvar, degreevar, degreeothermodevar, typ
     .Call('rem_degreeOneModeCpp', PACKAGE = 'rem', time, weightvar, degreevar, degreeothermodevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype)
 }
 
-fourCycleCpp <- function(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType) {
-    .Call('rem_fourCycleCpp', PACKAGE = 'rem', sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType)
+fourCycleCpp <- function(sender, currentSender, target, currentTarget, typevar, currentType, time, currentTime, weightvar, xlog, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType, w, x, i, begin) {
+    .Call('rem_fourCycleCpp', PACKAGE = 'rem', sender, currentSender, target, currentTarget, typevar, currentType, time, currentTime, weightvar, xlog, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType, w, x, i, begin)
 }
 
 similarityTotalAverageCpp <- function(sender, target, time, eventAttributeVar, eventAttribute, eventTypeVar, totalAverageSim, matchNomatchSim, senderTargetSim) {
@@ -47,5 +47,9 @@ absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, wei
 
 triadOldCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog) {
     .Call('rem_triadOldCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
+}
+
+fourCycleOldCpp <- function(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType) {
+    .Call('rem_fourCycleOldCpp', PACKAGE = 'rem', sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType)
 }
 

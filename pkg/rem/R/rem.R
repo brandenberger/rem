@@ -1784,10 +1784,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
 ################################################################################
 
 fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
-                          eventtypevar = NULL, eventtypevalue = 'standard', eventattributevar = NULL, 
-                          eventattributeAB = NULL, eventattributeAJ = NULL, eventattributeIB = NULL,
-                          eventattributeIJ = NULL, variablename = 'fourCycle', returnData = FALSE, 
-                          showprogressbar = FALSE){
+                          eventtypevar = NULL, eventtypevalue = 'standard', 
+                          eventfiltervar = NULL, 
+                          eventfilterAB = NULL, eventfilterAJ = NULL, 
+                          eventfilterIB = NULL, eventfilterIJ = NULL, 
+                          eventvar = NULL,
+                          variablename = 'fourCycle', returnData = FALSE, 
+                          showprogressbar = FALSE, 
+                          inParallel = FALSE, cluster = NULL){
   
   ####### check inputs
   ## check if sender input is available
@@ -1852,41 +1856,67 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
   }
   
   ## check if event-attribute inputs are available and correctly specified
-  if ( is.null(eventattributevar) == FALSE ) {
+  if ( is.null(eventfiltervar) == FALSE ) {
     # length test
-    if ( length(sender) != length(eventattributevar) ){
-      stop("'sender' and 'eventattributevar' are not of same length.")
+    if ( length(sender) != length(eventfiltervar) ){
+      stop("'sender' and 'eventfiltervar' are not of same length.")
     }
     # transform variable
-    eventattributevar <- as.character(eventattributevar)
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ) ){
+    eventfiltervar <- as.character(eventfiltervar)
+    if ( is.null(eventfilterAB) & is.null(eventfilterAJ) & is.null(eventfilterIB) & is.null(eventfilterIJ) ){
       stop("No 'eventattribute__' provided. Provide a string value by which the events are filtered.", )
     }
     # check if eventattributevalue is part of the variable
-    if ( is.null(eventattributeAB) == FALSE){
-      if ( length(grep(eventattributeAB, eventattributevar)) == 0 ) {
+    if ( is.null(eventfilterAB) == FALSE){
+      if ( length(grep(eventfilterAB, eventfiltervar)) == 0 ) {
         ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventattributeAB, "' is not an element of '", deparse(substitute(eventattributevar)) , "'.") 
+        stop("Value '", eventfilterAB, "' is not an element of '", deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
-    if ( is.null(eventattributeAJ) == FALSE){
-      if ( length(grep(eventattributeAJ, eventattributevar)) == 0 ) {
+    if ( is.null(eventfilterAJ) == FALSE){
+      if ( length(grep(eventfilterAJ, eventfiltervar)) == 0 ) {
         ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventattributeAJ, "' is not an element of '", deparse(substitute(eventattributevar)) , "'.") 
+        stop("Value '", eventfilterAJ, "' is not an element of '", deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
-    if ( is.null(eventattributeIB) == FALSE){
-      if ( length(grep(eventattributeIB, eventattributevar)) == 0 ) {
+    if ( is.null(eventfilterIB) == FALSE){
+      if ( length(grep(eventfilterIB, eventfiltervar)) == 0 ) {
         ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventattributeIB, "' is not an element of '", deparse(substitute(eventattributevar)) , "'.") 
+        stop("Value '", eventfilterIB, "' is not an element of '", deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
-    if ( is.null(eventattributeIJ) == FALSE){
-      if ( length(grep(eventattributeIJ, eventattributevar)) == 0 ) {
+    if ( is.null(eventfilterIJ) == FALSE){
+      if ( length(grep(eventfilterIJ, eventfiltervar)) == 0 ) {
         ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventattributeIJ, "' is not an element of '", deparse(substitute(eventattributevar)) , "'.") 
+        stop("Value '", eventfilterIJ, "' is not an element of '", deparse(substitute(eventfiltervar)) , "'.") 
       }
     }
+  }
+  
+  ## check event-var
+  if(is.null(eventvar) == FALSE){
+    if(length(unique(eventvar)) == 2){
+      if( ( sort(unique(eventvar))[1] == 0 & sort(unique(eventvar))[2] == 1  ) == FALSE){
+        stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+      }
+      }else{
+        stop('eventvar has to be a dummy variable with values 0 for non-events and
+             1 for true events.')
+    }
+      }
+  
+  ## cannot take parallel and progress bar
+  if(isTRUE(inParallel) & isTRUE(showprogressbar)){
+    stop('Cannot spit out progress of the function whilst running the 
+         loop in parallel. Turn showprogressbar to FALSE.')
+  }
+  
+  ## cannot have parallel without cluster
+  if(isTRUE(inParallel) & is.null(cluster)){
+    stop('By choosing to run the loop in parallel, you need to define a 
+         cluster. For instance: makeCluster(12, type="FORK"). Alternatively, 
+         hand over the number of nodes you would like to run the function on.')
   }
   
   ## check if variablename makes sense (no " " etc.)
@@ -1895,470 +1925,255 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
   ## create simple data set to be returned for degree calcuations with more than 1 output-variable
   ##TODO: should there be an event-id-variable?? => that would be useful here
   data.short <- data.frame(time)
+  ## 
+  result <- rep(NA, length(sender))
   
   ## calculate part of decay function
   xlog <- log(2)/halflife 
   
-  ####### calculate stat
-  ## create placeholder-variables to be used in the cpp-Function
-  placeholder <- rep("1", length(time))
+  ## prepare the data set
+  if(is.null(eventvar)){
+    senderLoop <- sender
+    targetLoop <- target
+    weightLoop <- weight
+    timeLoop <- time
+    if(is.null(eventtypevar)){
+      eventtypevarLoop <- rep("1", length(sender))
+      eventtypevalueLoop <- 'standard'
+    }else{
+      eventtypevarLoop <- eventtypevar
+      eventtypevalueLoop <- eventtypevalue
+    }
+    if(is.null(eventfilterAB)){
+      eventfiltervarABLoop <- rep("1", length(sender))
+      eventfilterABLoop <- "1"
+    }else{
+      eventfiltervarABLoop <- eventfiltervar
+      eventfilterABLoop <- eventfilterAB
+    }
+    if(is.null(eventfilterAJ)){
+      eventfiltervarAJLoop <- rep("1", length(sender))
+      eventfilterAJLoop <- "1"
+    }else{
+      eventfiltervarAJLoop <- eventfiltervar
+      eventfilterAJLoop <- eventfilterAJ
+    }
+    if(is.null(eventfilterIB)){
+      eventfiltervarIBLoop <- rep("1", length(sender))
+      eventfilterIBLoop <- "1"
+    }else{
+      eventfiltervarIBLoop <- eventfiltervar
+      eventfilterIBLoop <- eventfilterIB
+    }
+    if(is.null(eventfilterIJ)){
+      eventfiltervarIJLoop <- rep("1", length(sender))
+      eventfilterIJLoop <- "1"
+    }else{
+      eventfiltervarIJLoop <- eventfiltervar
+      eventfilterIJLoop <- eventfilterIJ
+    }
+  }else{ # counting process data is used
+    senderLoop <- sender[eventvar == 1]
+    targetLoop <- target[eventvar == 1]
+    weightLoop <- weight[eventvar == 1]
+    timeLoop <- time[eventvar == 1]
+    if(is.null(eventtypevar)){
+      eventtypevarLoop <- rep("1", length(senderLoop))
+      eventtypevalueLoop <- 'standard'
+    }else{
+      eventtypevarLoop <- eventtypevar[eventvar == 1]
+      eventtypevalueLoop <- eventtypevalue
+    }
+    if(is.null(eventfilterAB)){
+      eventfiltervarABLoop <- rep("1", length(sender)) # same length als sender
+      eventfilterABLoop <- "1"
+    }else{
+      eventfiltervarABLoop <- eventfiltervar # same length as sender
+      eventfilterABLoop <- eventfilterAB
+    }
+    if(is.null(eventfilterAJ)){
+      eventfiltervarAJLoop <- rep("1", length(senderLoop))
+      eventfilterAJLoop <- "1"
+    }else{
+      eventfiltervarAJLoop <- eventfiltervar[eventvar == 1]
+      eventfilterAJLoop <- eventfilterAJ
+    }
+    if(is.null(eventfilterIB)){
+      eventfiltervarIBLoop <- rep("1", length(senderLoop))
+      eventfilterIBLoop <- "1"
+    }else{
+      eventfiltervarIBLoop <- eventfiltervar[eventvar == 1]
+      eventfilterIBLoop <- eventfilterIB
+    }
+    if(is.null(eventfilterIJ)){
+      eventfiltervarIJLoop <- rep("1", length(senderLoop))
+      eventfilterIJLoop <- "1"
+    }else{
+      eventfiltervarIJLoop <- eventfiltervar[eventvar == 1]
+      eventfilterIJLoop <- eventfilterIJ
+    }
+  }
   
   ## calculate the fourCycle effects for each event
+  ##
+  if(isTRUE(inParallel)){
+    
+    ##
+    doParallel::registerDoParallel(cluster)
+    
+    ##
+    res <- foreach::foreach(i=1:length(sender), .combine=rbind)%dopar%{
+      
+      ## check if eventfilterAB is TRUE
+      if(eventfiltervarABLoop[i] == eventfilterABLoop){
+        
+        ## get list of what a said in the past
+        ## TODO: add timeLoop > beginTime => when you set the nr of events you can iterate back over, you have to incorporate this in these filter-functions:
+        w <- targetLoop[senderLoop == sender[i], 
+                        targetLoop != target[i], 
+                        timeLoop < time[i], 
+                        eventfiltervarAJLoop == eventfilterAJLoop]
+        w <- unique(w)
+      
+        ## get list of who else said b in the past
+        ## TODO: add timeLoop > beginTime => when you set the nr of events you can iterate back over, you have to incorporate this in these filter-functions:
+        if(eventtypevalue == 'standard'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop]
+        }else if(eventtypevalue == 'positive'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop, 
+                          eventtypevarLoop == eventtypevar[i]]
+        }else if(eventtypevalue == 'negative'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop, 
+                          eventtypevarLoop != eventtypevar[i]]
+        }
+        x <- unique(x)
+        
+        ## 
+        if(length(x) == 0 | length(w) == 0){
+          result <- 0
+        }else{
+          # find i in reduced data set
+          if(is.null(eventvar)){
+            iLoop <- i-1 # bc cpp-loops start at 0 not 1
+          }else{
+            iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
+          }
+          
+          ## cpp-loop
+          result <- fourCycleCpp(senderLoop, sender[i], targetLoop, target[i], 
+                                 eventtypevarLoop, eventtypevar[i], timeLoop, time[i], 
+                                 weightLoop, xlog, eventfiltervarAJLoop, 
+                                 eventfilterAJLoop, eventfiltervarIBLoop, 
+                                 eventfilterIBLoop, eventfiltervarIJLoop, 
+                                 eventfilterIJLoop, eventtypevalueLoop, 
+                                 w, x, iLoop, 0) #hardcode begin-optin in fourCycle to 0 => TODO: implement begin
+          
+        }
+      }else{ # if eventfilterAB[i] != eventfilterAB
+        result <- 0
+      }
+      
+      ## rbind the variable:
+      result
+    } #closes i-loop
+        
+    ## transform result variable
+    result <- as.numeric(as.character(res))
+    
+  }else{ # run loop without parallelization
+    
+    ## 
+    if(isTRUE(showprogressbar)){
+      pb <- txtProgressBar(min = 1, max = length(sender), style = 3)
+    }
+    for(i in 1:length(sender)){
+      if(isTRUE(showprogressbar)){
+        setTxtProgressBar(pb, i)
+      }
+      
+      ## check if eventfilterAB is TRUE
+      if(eventfiltervarABLoop[i] == eventfilterABLoop){
+        
+        ## get list of what a said in the past
+        ## TODO: add timeLoop > beginTime => when you set the nr of events you can iterate back over, you have to incorporate this in these filter-functions:
+        w <- targetLoop[senderLoop == sender[i], 
+                        targetLoop != target[i], 
+                        timeLoop < time[i], 
+                        eventfiltervarAJLoop == eventfilterAJLoop]
+        w <- unique(w)
+        
+        ## get list of who else said b in the past
+        ## TODO: add timeLoop > beginTime => when you set the nr of events you can iterate back over, you have to incorporate this in these filter-functions:
+        if(eventtypevalue == 'standard'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop]
+        }else if(eventtypevalue == 'positive'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop, 
+                          eventtypevarLoop == eventtypevar[i]]
+        }else if(eventtypevalue == 'negative'){
+          x <- senderLoop[targetLoop == target[i] & 
+                            senderLoop != sender[i] & 
+                            timeLoop < time[i] & 
+                            eventfiltervarIBLoop == eventfilterIBLoop, 
+                          eventtypevarLoop != eventtypevar[i]]
+        }
+        x <- unique(x)
+        
+        ## 
+        if(length(x) == 0 | length(w) == 0){
+          result[i] <- 0
+        }else{
+          # find i in reduced data set
+          if(is.null(eventvar)){
+            iLoop <- i-1 # bc cpp-loops start at 0 not 1
+          }else{
+            iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
+          }
+          
+          ## cpp-loop
+          result[i] <- fourCycleCpp(senderLoop, sender[i], targetLoop, target[i], 
+                                 eventtypevarLoop, eventtypevar[i], timeLoop, time[i], 
+                                 weightLoop, xlog, eventfiltervarAJLoop, 
+                                 eventfilterAJLoop, eventfiltervarIBLoop, 
+                                 eventfilterIBLoop, eventfiltervarIJLoop, 
+                                 eventfilterIJLoop, eventtypevalueLoop, 
+                                 w, x, iLoop, 0) #hardcode begin-optin in fourCycle to 0 => TODO: implement begin
+          
+        }
+      }else{ # if eventfilterAB[i] != eventfilterAB
+        result[i] <- 0
+      }
+    }# closes i-loop
+  } # closes if no parallel
   
-  if (eventtypevalue == "standard"){
-    
-    ## (1) fourCycle without filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)){
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", placeholder , "1", placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (1)
-    
-    ## (2) fourCycle with AB-filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (2)
-    
-    ## (3) fourCycle with AJ-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (3)
-    
-    ## (4) fourCycle with IB-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", placeholder , "1", eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (4)
-    
-    ## (5) fourCycle with IJ-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)== FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", placeholder , "1", placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (5)
-    
-    ## (6) fourCycle with AB + AJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeIB, placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (6)
-    
-    ## (7) fourCycle with AB + IB filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (7)
-    
-    ## (8) fourCycle with AB + IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ) == FALSE){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (8)
-    
-    ## (9) fourCycle with AJ + IB filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)  ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (9)
-    
-    ## (10) fourCycle with AJ + IJ filter
-    if ( is.null(eventattributeAB)  & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB)  & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (10)
-    
-    ## (11) fourCycle with IB + IJ filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", placeholder , "1", eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (11)
-    
-    ## (12) fourCycle with AB, AJ, IB filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (12)
-    
-    ## (13) fourCycle with AB, AJ, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB)  & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (13)
-    
-    ## (14) fourCycle with AB, IB, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ)  & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-    ## (15) fourCycle with AJ, IB, IJ filter
-    if ( is.null(eventattributeAB)  & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-    ## (16) fourCycle with AB, AJ, IB, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, placeholder, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-  }else{ #else: if eventtypevar is set
-    
-    ## (1) fourCycle without filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", placeholder , "1", placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (1)
-    
-    ## (2) fourCycle with AB-filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (2)
-    
-    ## (3) fourCycle with AJ-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (3)
-    
-    ## (4) fourCycle with IB-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", placeholder , "1", eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (4)
-    
-    ## (5) fourCycle with IJ-filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ)== FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", placeholder , "1", placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (5)
-    
-    ## (6) fourCycle with AB + AJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeIB, placeholder, "1", placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (6)
-    
-    ## (7) fourCycle with AB + IB filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (7)
-    
-    ## (8) fourCycle with AB + IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) & is.null(eventattributeIB) & is.null(eventattributeIJ) == FALSE){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (8)
-    
-    ## (9) fourCycle with AJ + IB filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ)  ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (9)
-    
-    ## (10) fourCycle with AJ + IJ filter
-    if ( is.null(eventattributeAB)  & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB)  & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (10)
-    
-    ## (11) fourCycle with IB + IJ filter
-    if ( is.null(eventattributeAB) & is.null(eventattributeAJ) & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", placeholder , "1", eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (11)
-    
-    ## (12) fourCycle with AB, AJ, IB filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, placeholder, "1", eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (12)
-    
-    ## (13) fourCycle with AB, AJ, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB)  & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, placeholder, "1", eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (13)
-    
-    ## (14) fourCycle with AB, IB, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ)  & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, placeholder , "1", eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-    ## (15) fourCycle with AJ, IB, IJ filter
-    if ( is.null(eventattributeAB)  & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, placeholder, "1", eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-    ## (16) fourCycle with AB, AJ, IB, IJ filter
-    if ( is.null(eventattributeAB) == FALSE & is.null(eventattributeAJ) == FALSE & is.null(eventattributeIB) == FALSE & is.null(eventattributeIJ) == FALSE ){		
-      result <- fourCycleCpp(sender, target, eventtypevar, time, weight, xlog, eventattributevar, eventattributeAB, eventattributevar , eventattributeAJ, eventattributevar, eventattributeIB, eventattributevar, eventattributeIJ, eventtypevalue )		
-      if ( returnData == TRUE ) {
-        data <- cbind(data, result)
-        names(data)[length(data)] <- variablename
-        ## return the data frame with the variable bound to it
-        return(data)
-      }else{ 
-        ## only return the 1 degree variable that was generated
-        return(result)
-      }
-    }#closes (16)
-    
-  }#closes else eventtypevar != null
-}
+  ## return results
+  ## if returnData = TRUE => return the entire data frame as well as the 1 additional inertia-variable
+  if ( returnData == TRUE ) {
+    ##TODO: not simply add new variable - but check if a variable with this name already exists and replace it?
+    data <- cbind(data, result)
+    names(data)[length(data)] <- variablename
+    ## return the data frame with the variable bound to it
+    return(data)
+  }else{ 
+    ## only return the 1 inertia variable that was generated
+    return(result)
+  }
+  
+} # closing
 
 ################################################################################
 ##	Similarity calculation

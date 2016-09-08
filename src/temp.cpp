@@ -150,7 +150,341 @@ NumericVector triadOldCpp(
 
 
 
-
+//####################################################################
+// [[Rcpp::export]]
+NumericVector fourCycleOldCpp(
+  std::vector<std::string> sender,
+  std::vector<std::string> target,
+  std::vector<std::string> typevar,
+  NumericVector time,
+  NumericVector weightvar,
+  double xlog,
+  std::vector<std::string> attrvarNow,
+  std::string attrNow,
+  std::vector<std::string> attrvarAaj,
+  std::string attrAaj, 
+  std::vector<std::string> attrvarBib,
+  std::string attrBib,
+  std::vector<std::string> attrvarCij,
+  std::string attrCij, 
+  std::string fourCycleType) {
+  
+  NumericVector result(sender.size());
+  std::vector<std::string> w;
+  std::vector<std::string> x;
+  std::vector<std::string> y;
+  std::vector<std::string> wy;
+  double weightA;
+  double weightB;
+  double weightC;
+  double tempTotalWeightC;
+  double tempTotalWeightA;
+  double tempTotalWeightAPositive;
+  double tempTotalWeightANegative;
+  double tempTotalWeightB;
+  double tempTotalWeightCPositive;
+  double tempTotalWeightCNegative;
+  double tempTotalWeightABC;
+  double tempTotalWeightABCPositive;
+  double tempTotalWeightABCNegative;
+  double totalWeightABCPositive;
+  double totalWeightABCNegative;
+  double totalWeightABC;
+  
+  
+  //for each event (=i-loop open)
+  for ( size_t i = 0; i < sender.size(); i++){
+    
+    //Filter: only current events with given attribute are selected.
+    if ( attrvarNow[i] == attrNow ) {
+      
+      w.clear();
+      x.clear();
+      y.clear();
+      totalWeightABCPositive = 0;
+      totalWeightABCNegative = 0;
+      tempTotalWeightABC = 0;
+      tempTotalWeightABCNegative = 0;
+      tempTotalWeightABCPositive = 0;
+      totalWeightABC = 0;
+      
+      // generate a list of issues that $a$ has used in past (j-loop-open) (=w-vector)
+      for ( size_t j = 0; j < i; j++ ) {
+        if (sender[j] == sender[i] && target[j] != target[i] && attrvarAaj[j] == attrAaj){
+          w.push_back(target[j]);
+        }
+        // list of actors who also used p (the same type/way a used it)
+        // here: attrvarM1[j] == attr2 == attr1 für nodematch
+        // here: attrvarM1[j] == attr2 != attr1 für nodemix
+        if (fourCycleType == "standard"){
+          if (sender[j] != sender[i] && target[j] == target[i] && attrvarBib[j] == attrBib ){
+            x.push_back(sender[j]);
+          }
+        }//closes if-fourCycleType == standard
+        if (fourCycleType == "positive"){
+          if (sender[j] != sender[i] && target[j] == target[i] && typevar[j] == typevar[i] && attrvarBib[j] == attrBib ){
+            x.push_back(sender[j]);
+          }
+        }//closes if-fourCycleType == positive (=supporting)
+        if (fourCycleType == "negative"){
+          if (sender[j] != sender[i] && target[j] == target[i] && typevar[j] != typevar[i] && attrvarBib[j] == attrBib ){
+            x.push_back(sender[j]);
+          }
+        }//closes if-fourCycleType == negative (=opposing)
+      } // j-loop close
+      
+      // clean up w (only unique values)
+      std::sort( w.begin(), w.end() );
+      w.erase( unique( w.begin(), w.end() ), w.end() );
+      // clean up x (only unique values)
+      std::sort( x.begin(), x.end() );
+      x.erase( unique( x.begin(), x.end() ), x.end() );
+      
+      // for each person in the list x (m-loop open) (=y-vector; wy-vector)
+      for (size_t m = 0; m < x.size(); m++ ) {
+        
+        tempTotalWeightB = 0;
+        
+        // What did actor say in past? (n-loop open)
+        y.clear();
+        for ( size_t n = 0; n < i; n++ ) {              
+          // for each person: find y-vector (list of targets $i$ has used)
+          if (sender[n] != sender[i] && sender[n] == x[m] && target[n] != target[i] && attrvarCij[n] == attrCij ){
+            y.push_back(target[n]);
+          }
+        } // n-loop close
+        
+        // clean up y (only unique values)
+        std::sort( y.begin(), y.end() );
+        y.erase( unique( y.begin(), y.end() ), y.end() );
+        
+        // interlock between x and y = wy vector
+        wy.clear();
+        std::sort( w.begin(), w.end() );
+        std::sort( y.begin(), y.end() );
+        std::set_intersection (w.begin(), w.end(), y.begin(), y.end(), std::back_inserter(wy) );
+        // erase douplicates
+        sort( wy.begin(), wy.end() );
+        wy.erase( unique( wy.begin(), wy.end() ), wy.end() );
+        
+        // if these two actors (x-vector from a and y-vector from i) interact via a shared concept: calculate weightB (weightB = w_t(i, p))
+        // positive/negative four cycle: only choose those events with different type
+        if ( fourCycleType == "standard" ){
+          if (wy.size() != 0) {
+            for ( size_t o = 0; o < i; o++ ) {
+              weightB = 0;
+              if (sender[o] == x[m] && target[o] == target[i] && attrvarBib[o] == attrBib ) {
+                weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
+                if ( time[i] == time[o] ) {
+                  weightB = 0;
+                }
+                tempTotalWeightB = tempTotalWeightB + weightB;
+              }
+            }// closes o-loop
+          }
+        }//closes if fourCycleType == standard
+        if ( fourCycleType == "positive" ){
+          if (wy.size() != 0) {
+            for ( size_t o = 0; o < i; o++ ) {
+              weightB = 0;
+              if (sender[o] == x[m] && target[o] == target[i] && typevar[o] == typevar[i] && attrvarBib[o] == attrBib ) {
+                weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
+                if ( time[i] == time[o] ) {
+                  weightB = 0;
+                }
+                tempTotalWeightB = tempTotalWeightB + weightB;
+              }
+            }// closes o-loop
+          }
+        }//closes if fourCycleType == positive
+        if ( fourCycleType == "negative" ){
+          if (wy.size() != 0) {
+            for ( size_t o = 0; o < i; o++ ) {
+              weightB = 0;
+              if (sender[o] == x[m] && target[o] == target[i] && typevar[o] != typevar[i] && attrvarBib[o] == attrBib ) {
+                weightB = std::abs(weightvar[o]) * exp( - ( time[i] - time[o] ) * xlog)  * xlog;
+                if ( time[i] == time[o] ) {
+                  weightB = 0;
+                }
+                tempTotalWeightB = tempTotalWeightB + weightB;
+              }
+            }// closes o-loop
+          }
+        }//closes if fourCycleType == negative
+        
+        if ( fourCycleType == "standard"){
+          // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
+          for (size_t p = 0; p < wy.size(); p++) {
+            
+            tempTotalWeightA = 0;
+            tempTotalWeightC = 0;
+            
+            for ( size_t q = 0; q < i; q++ ) {
+              weightA = 0;
+              weightC = 0;
+              
+              // calculate weightC (weightC = w_t(i, j))
+              if (sender[q] == x[m] && target[q] == wy[p] && attrvarCij[q] == attrCij ) {
+                weightC = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightC = 0;
+                }
+                tempTotalWeightC = tempTotalWeightC + weightC;
+              }
+              // calculate weightA (weightA = w_t(a, j))
+              if (sender[q] == sender[i] && target[q] == wy[p] && attrvarAaj[q] == attrAaj ) {
+                weightA = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightA = 0;
+                }
+                tempTotalWeightA = tempTotalWeightA + weightA;
+              }
+            } //closes q-loop
+            
+            // close q-loop (backflash on each actor-concept-actor combination) & calculate weight
+            // for each person (m) and concept in wy (p): 
+              
+              tempTotalWeightABC = tempTotalWeightA * tempTotalWeightB * tempTotalWeightC;
+            
+            // for each person: for each entry = sum up the multiplications
+            totalWeightABC = tempTotalWeightABC + totalWeightABC;
+          }//closes p-loop
+        }//closes if fourCycleType == standard
+        if ( fourCycleType == "positive" ){
+          // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
+          for (size_t p = 0; p < wy.size(); p++) {
+            
+            tempTotalWeightAPositive = 0;
+            tempTotalWeightCPositive = 0;
+            tempTotalWeightANegative = 0;
+            tempTotalWeightCNegative = 0;
+            
+            for ( size_t q = 0; q < i; q++ ) {
+              weightA = 0;
+              weightC = 0;
+              
+              // if both weightA and weightC events are of same type, do this:
+                // calculate weightC (weightC = w_t(i, j))
+              if (sender[q] == x[m] && target[q] == wy[p] && typevar[q] == typevar[i] && attrvarCij[q] == attrCij ) {
+                weightC = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightC = 0;
+                }
+                tempTotalWeightCPositive = tempTotalWeightCPositive + weightC;
+              }
+              // calculate weightA (weightA = w_t(a, j))
+              if (sender[q] == sender[i] && target[q] == wy[p] && typevar[q] == typevar[i] && attrvarAaj[q] == attrAaj ) {
+                weightA = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightA = 0;
+                }
+                tempTotalWeightAPositive = tempTotalWeightAPositive + weightA;
+              }
+              // if both weightA and weightC events are of same type and negative, do this:
+                // calculate weightC (weightC = w_t(i, j))
+              if (sender[q] == x[m] && target[q] == wy[p] && typevar[q] != typevar[i] && attrvarCij[q] == attrCij ) {
+                weightC = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightC = 0;
+                }
+                tempTotalWeightCNegative = tempTotalWeightCNegative + weightC;
+              }
+              // calculate weightA (weightA = w_t(a, j))
+              if (sender[q] == sender[i] && target[q] == wy[p] && typevar[q] != typevar[i] && attrvarAaj[q] == attrAaj ) {
+                weightA = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog) * xlog;
+                if ( time[i] == time[q] ) {
+                  weightA = 0;
+                }
+                tempTotalWeightANegative = tempTotalWeightANegative + weightA;
+              }
+            } //closes q-loop
+            
+            // close q-loop (backflash on each actor-concept-actor combination) & calculate weight
+            // for each person (m) and concept in wy (p): 
+              
+              tempTotalWeightABCPositive = tempTotalWeightAPositive * tempTotalWeightB * tempTotalWeightCPositive;
+            tempTotalWeightABCNegative = tempTotalWeightANegative * tempTotalWeightB * tempTotalWeightCNegative;
+            
+            // for each person: for each entry = sum up the multiplications
+            totalWeightABCPositive = tempTotalWeightABCPositive + totalWeightABCPositive;
+            totalWeightABCNegative = tempTotalWeightABCNegative + totalWeightABCNegative;
+          }//closes p-loop
+        }//closes if fourCycleType == positive
+        if ( fourCycleType == "negative" ){
+          // for each person: for each entry in wy: calculate weightA and weightC (p-loop open; q-loop open)
+          for (size_t p = 0; p < wy.size(); p++) {
+            
+            tempTotalWeightAPositive = 0;
+            tempTotalWeightCPositive = 0;
+            tempTotalWeightANegative = 0;
+            tempTotalWeightCNegative = 0;
+            
+            for ( size_t q = 0; q < i; q++ ) {
+              weightA = 0;
+              weightC = 0;
+              
+              // if both weightA and weightC events are of opposite type, do this:
+                // calculate weightC (weightC = w_t(i, j))
+              if (sender[q] == x[m] && target[q] == wy[p] && typevar[q] == typevar[i] && attrvarCij[q] == attrCij ) {
+                weightC = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightC = 0;
+                }
+                tempTotalWeightCPositive = tempTotalWeightCPositive + weightC;
+              }
+              // calculate weightA (weightA = w_t(a, j))
+              if (sender[q] == sender[i] && target[q] == wy[p] && typevar[q] != typevar[i] && attrvarAaj[q] == attrAaj ) {
+                weightA = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightA = 0;
+                }
+                tempTotalWeightAPositive = tempTotalWeightAPositive + weightA;
+              }
+              // if both weightA and weightC events are negative, do this:
+                // calculate weightC (weightC = w_t(i, j))
+              if (sender[q] == x[m] && target[q] == wy[p] && typevar[q] != typevar[i] && attrvarCij[q] == attrCij ) {
+                weightC = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog)  * xlog;
+                if ( time[i] == time[q] ) {
+                  weightC = 0;
+                }
+                tempTotalWeightCNegative = tempTotalWeightCNegative + weightC;
+              }
+              // calculate weightA (weightA = w_t(a, j))
+              if (sender[q] == sender[i] && target[q] == wy[p] && typevar[q] == typevar[i] && attrvarAaj[q] == attrAaj ) {
+                weightA = std::abs(weightvar[q]) * exp( - ( time[i] - time[q] ) * xlog) * xlog;
+                if ( time[i] == time[q] ) {
+                  weightA = 0;
+                }
+                tempTotalWeightANegative = tempTotalWeightANegative + weightA;
+              }
+            } //closes q-loop
+            
+            // close q-loop (backflash on each actor-concept-actor combination) & calculate weight
+            // for each person (m) and concept in wy (p): 
+              
+              tempTotalWeightABCPositive = tempTotalWeightAPositive * tempTotalWeightB * tempTotalWeightCPositive;
+            tempTotalWeightABCNegative = tempTotalWeightANegative * tempTotalWeightB * tempTotalWeightCNegative;
+            
+            // for each person: for each entry = sum up the multiplications
+            totalWeightABCPositive = tempTotalWeightABCPositive + totalWeightABCPositive;
+            totalWeightABCNegative = tempTotalWeightABCNegative + totalWeightABCNegative;
+          }//closes p-loop
+        }//closes if fourCycleType == negative
+      } // m-loop close
+      
+      if ( fourCycleType == "standard"){
+        totalWeightABC = std::pow(totalWeightABC, 1/3.); //whyever, there has to be a . behind the 1/3
+      }else{
+        totalWeightABC = std::pow(totalWeightABCPositive, 1/3.) + std::pow(totalWeightABCNegative, 1/3.); //wieso auch immer - aber da muss ein Punkt hinter die 3
+      }
+      result[i] = totalWeightABC; 
+      
+    }else{ //closes "if ( attrvarNow[i] == attrNow ) {}"
+           result[i] = 0;
+    }
+  } // i-loop close
+  return Rcpp::wrap(result);
+}
 
 
 

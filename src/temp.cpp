@@ -487,10 +487,566 @@ NumericVector fourCycleOldCpp(
 }
 
 
+//####################################################################
+//####################################################################
+// [[Rcpp::export]]
+NumericVector similaritySimpleOldCpp(
+  std::vector<std::string> sender,
+  std::vector<std::string> target,
+  NumericVector time,
+  double xlog,
+  std::vector<std::string> eventAttributeVar,
+  std::string eventAttribute,
+  std::vector<std::string> eventTypeVar,
+  std::string matchNomatchSim,
+  std::string senderTargetSim) {
+  
+  NumericVector result(sender.size());
+  std::vector<std::string> v;
+  std::vector<std::string> w;
+  std::vector<std::string> x;
+  std::vector<std::string> xw;
+  std::vector<double> a_positive;
+  std::vector<double> a_negative;
+  std::vector<double> i_negative;
+  std::vector<double> i_positive;	
+  std::vector<std::string> xwneg;
+  double totalNumber;
+  double numberNoMatch;
+  double numberMatch;
+  double timePLast;
+  int counter;
+  double totalSim;
+  double weightSim;
+  
+  //for each event (i-loop open)
+  for ( size_t i = 0; i < sender.size(); i++){
+    
+    v.clear();
+    w.clear();
+    xw.clear();
+    i_negative.clear();
+    a_negative.clear();
+    i_positive.clear();
+    a_positive.clear();
+    xwneg.clear();
+    totalNumber = 0;
+    
+    // loop back and find actors who said p and concepts that a said
+    for (size_t j = 0; j < i; j++) {
+      if ( senderTargetSim == "sender"){
+        if ( matchNomatchSim == "match" ){
+          if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute && eventTypeVar[j] == eventTypeVar[i]){
+            v.push_back(sender[j]);   // v = who else has said p just like $a$ used p (typematch)?
+          }
+        }else{ //no match-option
+               if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+                 v.push_back(sender[j]);   // v = who else has said p?
+               }
+        }
+        if (sender[j] == sender[i] && target[j] != target[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          w.push_back(target[j]);   // w = what else has actor a said?
+        }
+        
+      }else{
+        if (sender[j] == sender[i] && target[j] != target[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          v.push_back(target[j]);   // v = what else has actor a said?
+        }
+        if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          w.push_back(sender[j]);   // w = who else has said p?
+        }
+      }
+    }
+    // clean up v and w
+    std::sort( w.begin(), w.end() );
+    w.erase( unique( w.begin(), w.end() ), w.end() );
+    std::sort( v.begin(), v.end() );
+    v.erase( unique( v.begin(), v.end() ), v.end() );
+    
+    // set variables
+    totalSim = 0;
+    counter = 0;
+    
+    // for each entry in v
+    for (size_t k = 0; k < v.size(); k++){
+      
+      x.clear();
+      xw.clear();
+      
+      if ( senderTargetSim == "sender" ){
+        for (size_t l = 0; l < i; l++) {
+          // if the event has concept k in v
+          if (sender[l] == v[k] && time[l] != time[i] && target[l] != target[i] && eventAttributeVar[l] == eventAttribute)  {      
+            x.push_back(target[l]);
+          }
+        }//closes l-loop
+      }else{
+        for (size_t l = 0; l < i; l++) {
+          // if the event has concept k in v
+          if (target[l] == v[k] && time[l] != time[i] && sender[l] != sender[i] && eventAttributeVar[l] == eventAttribute)  {      
+            x.push_back(sender[l]);
+          }
+        }//closes l-loop
+      }
+      
+      // clean up x-vector
+      std::sort( x.begin(), x.end() );
+      x.erase( unique( x.begin(), x.end() ), x.end() );
+      
+      // for each entry in v => get intersection between x and w (w = actors who said p/what else has actor a said?) = filter actors who said p and v[k]
+      xw.clear();
+      std::sort( w.begin(), w.end() );
+      std::sort( x.begin(), x.end() );
+      std::set_intersection (x.begin(), x.end(), w.begin(), w.end(), std::back_inserter(xw) );
+      // erase douplicates
+      sort( xw.begin(), xw.end() );
+      xw.erase( unique( xw.begin(), xw.end() ), xw.end() );
+      
+      if ( matchNomatchSim == "match"){
+        
+        // if there acctually is an intersection in xw
+        if (xw.size() != 0 ) {
+          
+          // for each entry in xw:
+            for (size_t m = 0; m < xw.size(); m++) {
+              
+              i_negative.clear();
+              i_positive.clear();
+              a_negative.clear();
+              a_positive.clear();
+              
+              // loop back over all events until i
+              for (size_t n = 0; n < i; n++){
+                if ( senderTargetSim == "sender" ){
+                  if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_positive.push_back(time[n]);
+                  }
+                  if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_negative.push_back(time[n]);
+                  }
+                  if (sender[n] == sender[i] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_positive.push_back(time[n]);
+                  }
+                  if (sender[n] == sender[i] && target[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_negative.push_back(time[n]);
+                  }
+                }else{
+                  if (target[n] == v[k] && sender[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_positive.push_back(time[n]);
+                  }
+                  if (target[n] == v[k] && sender[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_negative.push_back(time[n]);
+                  }
+                  if (target[n] == target[i] && sender[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_positive.push_back(time[n]);
+                  }
+                  if (target[n] == target[i] && sender[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_negative.push_back(time[n]);
+                  }
+                }//closes senderTargetSim == target
+              }//closes n-loop		
+            }//closes m-loop
+          
+        }//closes if xw.size != 0
+        
+        numberNoMatch = 0;
+        numberMatch = 0;
+        
+        //how large are the respextive vectors with the matches in them?
+        if (a_positive.size() >= i_positive.size() && i_positive.size() != 0 ) {
+          numberMatch = i_positive.size();
+        }
+        if (a_negative.size() >= i_negative.size() && i_negative.size() != 0) {
+          numberNoMatch = i_negative.size();
+        }
+        if (i_positive.size() > a_positive.size() && a_positive.size() != 0) {
+          numberMatch = a_positive.size();
+        }
+        if (i_negative.size() > a_negative.size() && a_negative.size() != 0) {
+          numberNoMatch = a_negative.size();
+        }
+        //// how many actors used concept v[k] in same manner as a? // how many concepts are used by both in same manner?
+        totalNumber = totalNumber + numberNoMatch + numberMatch;
+      }else{ // if matchNomatchSim = "nomatch"
+             // how many actors used concept v[k]? // how many concepts are used by both?
+             totalNumber = totalNumber + xw.size();
+      }//closes matchNomatchSim == "nomatch"
+      
+      // how many actors used concept v[k]? // how many concepts are used by both?
+      if ( xw.size() != 0 ){
+        // find time for the time-discount in the simple-similarity equation
+        if ( senderTargetSim == "sender"){
+          // find time, when actor k used concept $p$ last
+          for (int q = i-1; q >= 0; q--){
+            if ( matchNomatchSim == "nomatch"){
+              if (sender[q] == v[k] && target[q] == target[i] && time[q] != time[i] &&
+                    eventAttributeVar[q] == eventAttribute){
+                timePLast = time[q];
+                break;
+              }
+            }else if (matchNomatchSim == "match"){
+              if (sender[q] == v[k] && target[q] == target[i] && time[q] != time[i] &&
+                    eventAttributeVar[q] == eventAttribute && eventTypeVar[q] == eventTypeVar[i]){
+                timePLast = time[q];
+                break;
+              }
+            }
+          }//closes q-loop
+        }else if ( senderTargetSim == "target"){
+          // find time, when target k was last used by $a$
+            for (int q = i-1; q >= 0; q--){
+              if (matchNomatchSim == "nomatch"){
+                if (target[q] == v[k] && sender[q] == sender[i] && time[q] != time[i] &&
+                      eventAttributeVar[q] == eventAttribute){
+                  timePLast = time[q];
+                  break;
+                }
+              } else if (matchNomatchSim == "match"){
+                if (target[q] == v[k] && sender[q] == sender[i] && time[q] != time[i] &&
+                      eventAttributeVar[q] == eventAttribute && eventTypeVar[q] == eventTypeVar[i]){
+                  timePLast = time[q];
+                  break;
+                }
+              }
+            }//closes q-loop
+        }//closes senderTargetSim == "target"
+        
+        // calculate weight of each actor/target
+        weightSim = totalNumber * exp(-(time[i]-timePLast)*xlog) * xlog;
+        totalSim = totalSim + weightSim;
+        if (weightSim != 0) {
+          counter++;   
+        }
+      }//closes if xw.size != 0
+    }//closes k-loop
+    
+    if (counter == 0) {
+      result[i] = 0;
+    }else{
+      result[i] = (totalSim/counter);
+    }
+  }//i-loop close
+  return Rcpp::wrap(result);
+}
 
 
-
-
+//####################################################################
+// [[Rcpp::export]]
+NumericVector similarityComplexOldCpp(
+  std::vector<std::string> sender,
+  std::vector<std::string> target,
+  NumericVector time,
+  double xlog,
+  double halflifeTimeDifference,
+  std::vector<std::string> eventAttributeVar,
+  std::string eventAttribute,
+  std::vector<std::string> eventTypeVar,
+  std::string matchNomatchSim,
+  std::string senderTargetSim) {
+  
+  NumericVector result(sender.size());
+  std::vector<std::string> v;
+  std::vector<std::string> w;
+  std::vector<std::string> x;
+  std::vector<std::string> xw;
+  std::vector<std::string> xwneg;
+  std::vector<double> a_positive;
+  std::vector<double> a_negative;
+  std::vector<double> i_negative;
+  std::vector<double> i_positive;	
+  std::vector<double> i_sendertarget;
+  std::vector<double> a_sendertarget;
+  double totalNumber;
+  double timePLast = 0.0;
+  int counter;
+  double totalSim;
+  double weightSim;
+  double sumCouplePositive;
+  double sumCoupleNegative;
+  double couple;
+  double sumCoupleNoMatch;
+  double sumConcept;
+  
+  
+  //for each event (i-loop open)
+  for ( size_t i = 0; i < sender.size(); i++){
+    
+    v.clear();
+    w.clear();
+    xw.clear();
+    i_negative.clear();
+    a_negative.clear();
+    i_positive.clear();
+    a_positive.clear();
+    a_sendertarget.clear();
+    i_sendertarget.clear();
+    xwneg.clear();
+    totalNumber = 0;
+    counter = 0;
+    sumConcept = 0; //TODO: here or inside k-loop?
+    
+    
+    // loop back and find actors who said p and concepts that a said
+    for (size_t j = 0; j < i; j++) {
+      if ( senderTargetSim == "sender"){
+        if ( matchNomatchSim == "match" ){
+          if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute && eventTypeVar[j] == eventTypeVar[i]){
+            v.push_back(sender[j]);   // v = who else has said p just like $a$ used p (typematch)?
+          }
+        }else{ //no match-option
+               if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+                 v.push_back(sender[j]);   // v = who else has said p?
+               }
+        }
+        if (sender[j] == sender[i] && target[j] != target[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          w.push_back(target[j]);   // w = what else has actor a said?
+        }
+        
+      }else{
+        if (sender[j] == sender[i] && target[j] != target[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          v.push_back(target[j]);   // v = what else has actor a said?
+        }
+        if (target[j] == target[i] && sender[j] != sender[i] && time[j] != time[i] && eventAttributeVar[j] == eventAttribute){
+          w.push_back(sender[j]);   // w = who else has said p?
+        }
+      }
+    }
+    // clean up v and w
+    std::sort( w.begin(), w.end() );
+    w.erase( unique( w.begin(), w.end() ), w.end() );
+    std::sort( v.begin(), v.end() );
+    v.erase( unique( v.begin(), v.end() ), v.end() );
+    
+    // set variables
+    totalSim = 0;
+    counter = 0;
+    
+    // for each entry in v
+    for (size_t k = 0; k < v.size(); k++){
+      
+      x.clear();
+      xw.clear();
+      
+      if ( senderTargetSim == "sender" ){
+        for (size_t l = 0; l < i; l++) {
+          // if the event has concept k in v
+          if (sender[l] == v[k] && time[l] != time[i] && target[l] != target[i] && eventAttributeVar[l] == eventAttribute)  {      
+            x.push_back(target[l]);
+          }
+        }//closes l-loop
+      }else{
+        for (size_t l = 0; l < i; l++) {
+          // if the event has concept k in v
+          if (target[l] == v[k] && time[l] != time[i] && sender[l] != sender[i] && eventAttributeVar[l] == eventAttribute)  {      
+            x.push_back(sender[l]);
+          }
+        }//closes l-loop
+      }
+      
+      // clean up x-vector
+      std::sort( x.begin(), x.end() );
+      x.erase( unique( x.begin(), x.end() ), x.end() );
+      
+      // for each entry in v => get intersection between x and w (w = actors who said p/what else has actor a said?) = filter actors who said p and v[k]
+      xw.clear();
+      std::sort( w.begin(), w.end() );
+      std::sort( x.begin(), x.end() );
+      std::set_intersection (x.begin(), x.end(), w.begin(), w.end(), std::back_inserter(xw) );
+      // erase douplicates
+      sort( xw.begin(), xw.end() );
+      xw.erase( unique( xw.begin(), xw.end() ), xw.end() );
+      
+      if ( matchNomatchSim == "match"){
+        
+        // if there acctually is an intersection in xw
+        if (xw.size() != 0 ) {
+          
+          // for each entry in xw:
+            for (size_t m = 0; m < xw.size(); m++) {
+              
+              i_negative.clear();
+              i_positive.clear();
+              a_negative.clear();
+              a_positive.clear();
+              i_sendertarget.clear();
+              a_sendertarget.clear();
+              
+              // loop back over all events until i
+              for (size_t n = 0; n < i; n++){
+                if ( senderTargetSim == "sender" ){
+                  if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_positive.push_back(time[n]);
+                  }
+                  if (sender[n] == v[k] && target[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_negative.push_back(time[n]);
+                  }
+                  if (sender[n] == sender[i] && target[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_positive.push_back(time[n]);
+                  }
+                  if (sender[n] == sender[i] && target[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_negative.push_back(time[n]);
+                  }
+                }else{
+                  if (target[n] == v[k] && sender[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_positive.push_back(time[n]);
+                  }
+                  if (target[n] == v[k] && sender[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    i_negative.push_back(time[n]);
+                  }
+                  if (target[n] == target[i] && sender[n] == xw[m] && eventTypeVar[n] == eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_positive.push_back(time[n]);
+                  }
+                  if (target[n] == target[i] && sender[n] == xw[m] && eventTypeVar[n] != eventTypeVar[i] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                    a_negative.push_back(time[n]);
+                  }
+                }//closes senderTargetSim == target
+              }//closes n-loop		
+            }//closes m-loop
+          
+        }//closes if xw.size != 0
+        
+        sumCouplePositive = 0;
+        sumCoupleNegative = 0;
+        couple = 0;
+        
+        //how large are the respextive vectors with the matches in them?
+        if (a_positive.size() >= i_positive.size() && i_positive.size() != 0 ) {
+          for (size_t p = 0; p < i_positive.size(); p++){
+            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2.0)/halflifeTimeDifference));
+            sumCouplePositive = sumCouplePositive + couple;
+            couple = 0;
+          }
+        }
+        if (a_negative.size() >= i_negative.size() && i_negative.size() != 0) {
+          for (size_t p = 0; p < i_negative.size(); p++){
+            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2.0)/halflifeTimeDifference));
+            sumCoupleNegative = sumCoupleNegative + couple;
+            couple = 0;
+          }
+        }
+        if (i_positive.size() > a_positive.size() && a_positive.size() != 0) {
+          for (size_t p = 0; p < a_positive.size(); p++){
+            couple = 1 * exp(-(std::abs(i_positive[p]-a_positive[p]))*(log(2.0)/halflifeTimeDifference));
+            sumCouplePositive = sumCouplePositive + couple;
+            couple = 0;
+          }
+        }
+        if (i_negative.size() > a_negative.size() && a_negative.size() != 0) {
+          for (size_t p = 0; p < a_negative.size(); p++){
+            couple = 1 * exp(-(std::abs(i_negative[p]-a_negative[p]))*(log(2.0)/halflifeTimeDifference));
+            sumCoupleNegative = sumCoupleNegative + couple;
+            couple = 0;
+          }
+        }
+        //// how many actors used concept v[k] in same manner as a? // how many concepts are used by both in same manner?
+        sumConcept = sumConcept + sumCoupleNegative + sumCouplePositive;
+      }else{ // if matchNomatchSim = "nomatch"
+             // if there acctually is an intersection in xw
+             if (xw.size() != 0 ) {
+               
+               // for each entry in xw:
+                 for (size_t m = 0; m < xw.size(); m++) {
+                   i_sendertarget.clear();
+                   a_sendertarget.clear();
+                   
+                   // loop back over all events until i
+                   for (size_t n = 0; n < i; n++){
+                     if ( senderTargetSim == "sender" ){
+                       if (sender[n] == v[k] && target[n] == xw[m] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                         i_sendertarget.push_back(time[n]);
+                       }
+                       if (sender[n] == sender[i] && target[n] == xw[m]  && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                         a_sendertarget.push_back(time[n]);
+                       }
+                     }else{
+                       if (target[n] == v[k] && sender[n] == xw[m] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                         i_sendertarget.push_back(time[n]);
+                       }
+                       if (target[n] == target[i] && sender[n] == xw[m] && time[n] != time[i] && eventAttributeVar[n] == eventAttribute){
+                         a_sendertarget.push_back(time[n]);
+                       }
+                     }//closes senderTargetSim == target
+                   }//closes n-loop
+                 }//closes m-loop
+             }//closes xw.size() != 0
+             
+             sumCoupleNoMatch = 0;
+             
+             //how large are the respextive vectors with the matches in them?
+             if (a_sendertarget.size() >= i_sendertarget.size() && i_sendertarget.size() != 0) {
+               for (size_t p = 0; p < i_negative.size(); p++){
+                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2.0)/halflifeTimeDifference));
+                 sumCoupleNoMatch = sumCoupleNoMatch + couple;
+                 couple = 0;
+               }
+             }
+             if (i_sendertarget.size() > a_sendertarget.size() && a_sendertarget.size() != 0) {
+               for (size_t p = 0; p < a_positive.size(); p++){
+                 couple = 1 * exp(-(std::abs(i_sendertarget[p]-a_sendertarget[p]))*(log(2.0)/halflifeTimeDifference));
+                 sumCoupleNoMatch = sumCoupleNoMatch + couple;
+                 couple = 0;
+               }
+             }
+             //add them together
+             sumConcept = sumConcept + sumCoupleNoMatch;	
+      }//closes matchNomatchSim == "nomatch"
+      
+      // how many actors used concept v[k]? // how many concepts are used by both?
+      if ( xw.size() != 0 ){
+        // find time for the time-discount in the simple-similarity equation
+        if ( senderTargetSim == "sender"){
+          // find time, when actor k used concept $p$ last
+          for (int q = i-1; q >= 0; q--){
+            if ( matchNomatchSim == "nomatch"){
+              if (sender[q] == v[k] && target[q] == target[i] && time[q] != time[i] &&
+                    eventAttributeVar[q] == eventAttribute){
+                timePLast = time[q];
+                break;
+              }
+            }else if (matchNomatchSim == "match"){
+              if (sender[q] == v[k] && target[q] == target[i] && time[q] != time[i] &&
+                    eventAttributeVar[q] == eventAttribute && eventTypeVar[q] == eventTypeVar[i]){
+                timePLast = time[q];
+                break;
+              }
+            }
+          }//closes q-loop
+        }else if ( senderTargetSim == "target"){
+          // find time, when target k was last used by $a$
+            for (int q = i-1; q >= 0; q--){
+              if (matchNomatchSim == "nomatch"){
+                if (target[q] == v[k] && sender[q] == sender[i] && time[q] != time[i] &&
+                      eventAttributeVar[q] == eventAttribute){
+                  timePLast = time[q];
+                  break;
+                }
+              } else if (matchNomatchSim == "match"){
+                if (target[q] == v[k] && sender[q] == sender[i] && time[q] != time[i] &&
+                      eventAttributeVar[q] == eventAttribute && eventTypeVar[q] == eventTypeVar[i]){
+                  timePLast = time[q];
+                  break;
+                }
+              }
+            }//closes q-loop
+        }//closes senderTargetSim == "target"
+        
+        // calculate weight of each actor/target
+        weightSim = sumConcept * exp(-(time[i]-timePLast)*xlog) * xlog;
+        totalSim = totalSim + weightSim;
+        if (weightSim != 0) {
+          counter++;   
+        }
+      }//closes if xw.size != 0
+    }//closes k-loop
+    
+    if (counter == 0) {
+      result[i] = 0;
+    }else{
+      result[i] = (totalSim/counter);
+    }
+  }//i-loop close
+  return Rcpp::wrap(result);
+}
 
 
 

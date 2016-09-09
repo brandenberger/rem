@@ -53,7 +53,7 @@ paste events should be filtered depending on their attribute. Each distinct edge
 
 \item{eventfilterIJ}{see \code{eventfilterAB}.}
 
-\item{eventvar}{ An optional dummy variable with 0 values for null-events and 1 values for true events. If the \code{data} is in the form of counting process data, use the \code{eventvar}-option to specify which variable contains the 0/1-dummy for event occurrence. If this variable is not specified, all events in the past will be considered for the calulation of the triad statistic, regardless if they occurred or not (= are null-events). Misspecification could result in grievous errors in the calculation of the network statistic.}
+\item{eventvar}{ An optional dummy variable with 0 values for null-events and 1 values for true events. If the \code{data} is in the form of counting process data, use the \code{eventvar}-option to specify which variable contains the 0/1-dummy for event occurrence. If this variable is not specified, all events in the past will be considered for the calulation of the four cycle statistic, regardless if they occurred or not (= are null-events). Misspecification could result in grievous errors in the calculation of the network statistic.}
 
 \item{variablename}{ An optional value (or values) with the name the four cycle statistic variable should be given. To be used if \code{returnData = TRUE}.}
 

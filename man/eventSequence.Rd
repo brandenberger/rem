@@ -132,6 +132,18 @@ dt$eventSeqEx <- eventSequence(datevar = dt$time,
                                excludeDate = c('800108', '800112'),
                                returnData = FALSE, 
                                sortData = FALSE)
+
+# return the sequence data set, where all values in the event sequence
+# correspond to the date of the events. Useful to calculate
+# start-variables for the createRemDataset-command.
+seq.data <- eventSequence(datevar = dt$time,
+                          dateformat = "\%y\%m\%d", 
+                          data = dt, type = "continuous",
+                          byTime = "daily", 
+                          excludeDate = c("800108", "800112"),
+                          returnData = FALSE, 
+                          sortData = FALSE, 
+                          returnDateSequenceData = TRUE)
 }
 %\keyword{key}
 

@@ -17,16 +17,16 @@ fourCycleCpp <- function(sender, currentSender, target, currentTarget, typevar, 
     .Call('rem_fourCycleCpp', PACKAGE = 'rem', sender, currentSender, target, currentTarget, typevar, currentType, time, currentTime, weightvar, xlog, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType, w, x, i, begin)
 }
 
-similarityTotalAverageCpp <- function(sender, target, time, eventAttributeVar, eventAttribute, eventTypeVar, totalAverageSim, matchNomatchSim, senderTargetSim) {
-    .Call('rem_similarityTotalAverageCpp', PACKAGE = 'rem', sender, target, time, eventAttributeVar, eventAttribute, eventTypeVar, totalAverageSim, matchNomatchSim, senderTargetSim)
+similarityTotalAverageCpp <- function(sender, currentSender, target, currentTarget, time, currentTime, eventAttributeVar, eventAttribute, eventTypeVar, currentType, totalAverageSim, matchNomatchSim, senderTargetSim, v, w, i, begin) {
+    .Call('rem_similarityTotalAverageCpp', PACKAGE = 'rem', sender, currentSender, target, currentTarget, time, currentTime, eventAttributeVar, eventAttribute, eventTypeVar, currentType, totalAverageSim, matchNomatchSim, senderTargetSim, v, w, i, begin)
 }
 
-similaritySimpleCpp <- function(sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
-    .Call('rem_similaritySimpleCpp', PACKAGE = 'rem', sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
+similaritySimpleCpp <- function(sender, currentSender, target, currentTarget, time, currentTime, xlog, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin) {
+    .Call('rem_similaritySimpleCpp', PACKAGE = 'rem', sender, currentSender, target, currentTarget, time, currentTime, xlog, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin)
 }
 
-similarityComplexCpp <- function(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
-    .Call('rem_similarityComplexCpp', PACKAGE = 'rem', sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
+similarityComplexCpp <- function(sender, currentSender, target, currentTarget, time, currentTime, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin) {
+    .Call('rem_similarityComplexCpp', PACKAGE = 'rem', sender, currentSender, target, currentTarget, time, currentTime, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin)
 }
 
 reciprocityCpp <- function(time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype) {
@@ -51,5 +51,13 @@ triadOldCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, 
 
 fourCycleOldCpp <- function(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType) {
     .Call('rem_fourCycleOldCpp', PACKAGE = 'rem', sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType)
+}
+
+similaritySimpleOldCpp <- function(sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
+    .Call('rem_similaritySimpleOldCpp', PACKAGE = 'rem', sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
+}
+
+similarityComplexOldCpp <- function(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
+    .Call('rem_similarityComplexOldCpp', PACKAGE = 'rem', sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
 }
 

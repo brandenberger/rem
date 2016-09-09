@@ -102,60 +102,84 @@ BEGIN_RCPP
 END_RCPP
 }
 // similarityTotalAverageCpp
-NumericVector similarityTotalAverageCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string totalAverageSim, std::string matchNomatchSim, std::string senderTargetSim);
-RcppExport SEXP rem_similarityTotalAverageCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP totalAverageSimSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP) {
+double similarityTotalAverageCpp(std::vector<std::string> sender, std::string currentSender, std::vector<std::string> target, std::string currentTarget, NumericVector time, double currentTime, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string currentType, std::string totalAverageSim, std::string matchNomatchSim, std::string senderTargetSim, std::vector<std::string> v, std::vector<std::string> w, size_t i, size_t begin);
+RcppExport SEXP rem_similarityTotalAverageCpp(SEXP senderSEXP, SEXP currentSenderSEXP, SEXP targetSEXP, SEXP currentTargetSEXP, SEXP timeSEXP, SEXP currentTimeSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP currentTypeSEXP, SEXP totalAverageSimSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP, SEXP vSEXP, SEXP wSEXP, SEXP iSEXP, SEXP beginSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentSender(currentSenderSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentTarget(currentTargetSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttributeVar(eventAttributeVarSEXP);
     Rcpp::traits::input_parameter< std::string >::type eventAttribute(eventAttributeSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventTypeVar(eventTypeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentType(currentTypeSEXP);
     Rcpp::traits::input_parameter< std::string >::type totalAverageSim(totalAverageSimSEXP);
     Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
     Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
-    __result = Rcpp::wrap(similarityTotalAverageCpp(sender, target, time, eventAttributeVar, eventAttribute, eventTypeVar, totalAverageSim, matchNomatchSim, senderTargetSim));
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type v(vSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type w(wSEXP);
+    Rcpp::traits::input_parameter< size_t >::type i(iSEXP);
+    Rcpp::traits::input_parameter< size_t >::type begin(beginSEXP);
+    __result = Rcpp::wrap(similarityTotalAverageCpp(sender, currentSender, target, currentTarget, time, currentTime, eventAttributeVar, eventAttribute, eventTypeVar, currentType, totalAverageSim, matchNomatchSim, senderTargetSim, v, w, i, begin));
     return __result;
 END_RCPP
 }
 // similaritySimpleCpp
-NumericVector similaritySimpleCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, double xlog, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string matchNomatchSim, std::string senderTargetSim);
-RcppExport SEXP rem_similaritySimpleCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP xlogSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP) {
+double similaritySimpleCpp(std::vector<std::string> sender, std::string currentSender, std::vector<std::string> target, std::string currentTarget, NumericVector time, double currentTime, double xlog, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string currentType, std::string matchNomatchSim, std::string senderTargetSim, std::vector<std::string> v, std::vector<std::string> w, size_t i, size_t begin);
+RcppExport SEXP rem_similaritySimpleCpp(SEXP senderSEXP, SEXP currentSenderSEXP, SEXP targetSEXP, SEXP currentTargetSEXP, SEXP timeSEXP, SEXP currentTimeSEXP, SEXP xlogSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP currentTypeSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP, SEXP vSEXP, SEXP wSEXP, SEXP iSEXP, SEXP beginSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentSender(currentSenderSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentTarget(currentTargetSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);
     Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttributeVar(eventAttributeVarSEXP);
     Rcpp::traits::input_parameter< std::string >::type eventAttribute(eventAttributeSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventTypeVar(eventTypeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentType(currentTypeSEXP);
     Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
     Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
-    __result = Rcpp::wrap(similaritySimpleCpp(sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim));
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type v(vSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type w(wSEXP);
+    Rcpp::traits::input_parameter< size_t >::type i(iSEXP);
+    Rcpp::traits::input_parameter< size_t >::type begin(beginSEXP);
+    __result = Rcpp::wrap(similaritySimpleCpp(sender, currentSender, target, currentTarget, time, currentTime, xlog, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin));
     return __result;
 END_RCPP
 }
 // similarityComplexCpp
-NumericVector similarityComplexCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, double xlog, double halflifeTimeDifference, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string matchNomatchSim, std::string senderTargetSim);
-RcppExport SEXP rem_similarityComplexCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP xlogSEXP, SEXP halflifeTimeDifferenceSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP) {
+double similarityComplexCpp(std::vector<std::string> sender, std::string currentSender, std::vector<std::string> target, std::string currentTarget, NumericVector time, double currentTime, double xlog, double halflifeTimeDifference, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string currentType, std::string matchNomatchSim, std::string senderTargetSim, std::vector<std::string> v, std::vector<std::string> w, size_t i, size_t begin);
+RcppExport SEXP rem_similarityComplexCpp(SEXP senderSEXP, SEXP currentSenderSEXP, SEXP targetSEXP, SEXP currentTargetSEXP, SEXP timeSEXP, SEXP currentTimeSEXP, SEXP xlogSEXP, SEXP halflifeTimeDifferenceSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP currentTypeSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP, SEXP vSEXP, SEXP wSEXP, SEXP iSEXP, SEXP beginSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentSender(currentSenderSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentTarget(currentTargetSEXP);
     Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);
     Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
     Rcpp::traits::input_parameter< double >::type halflifeTimeDifference(halflifeTimeDifferenceSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttributeVar(eventAttributeVarSEXP);
     Rcpp::traits::input_parameter< std::string >::type eventAttribute(eventAttributeSEXP);
     Rcpp::traits::input_parameter< std::vector<std::string> >::type eventTypeVar(eventTypeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type currentType(currentTypeSEXP);
     Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
     Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
-    __result = Rcpp::wrap(similarityComplexCpp(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim));
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type v(vSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type w(wSEXP);
+    Rcpp::traits::input_parameter< size_t >::type i(iSEXP);
+    Rcpp::traits::input_parameter< size_t >::type begin(beginSEXP);
+    __result = Rcpp::wrap(similarityComplexCpp(sender, currentSender, target, currentTarget, time, currentTime, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin));
     return __result;
 END_RCPP
 }
@@ -285,6 +309,45 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::string >::type attrCij(attrCijSEXP);
     Rcpp::traits::input_parameter< std::string >::type fourCycleType(fourCycleTypeSEXP);
     __result = Rcpp::wrap(fourCycleOldCpp(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType));
+    return __result;
+END_RCPP
+}
+// similaritySimpleOldCpp
+NumericVector similaritySimpleOldCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, double xlog, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string matchNomatchSim, std::string senderTargetSim);
+RcppExport SEXP rem_similaritySimpleOldCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP xlogSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttributeVar(eventAttributeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type eventAttribute(eventAttributeSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventTypeVar(eventTypeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
+    Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
+    __result = Rcpp::wrap(similaritySimpleOldCpp(sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim));
+    return __result;
+END_RCPP
+}
+// similarityComplexOldCpp
+NumericVector similarityComplexOldCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, double xlog, double halflifeTimeDifference, std::vector<std::string> eventAttributeVar, std::string eventAttribute, std::vector<std::string> eventTypeVar, std::string matchNomatchSim, std::string senderTargetSim);
+RcppExport SEXP rem_similarityComplexOldCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP xlogSEXP, SEXP halflifeTimeDifferenceSEXP, SEXP eventAttributeVarSEXP, SEXP eventAttributeSEXP, SEXP eventTypeVarSEXP, SEXP matchNomatchSimSEXP, SEXP senderTargetSimSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
+    Rcpp::traits::input_parameter< double >::type halflifeTimeDifference(halflifeTimeDifferenceSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttributeVar(eventAttributeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type eventAttribute(eventAttributeSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventTypeVar(eventTypeVarSEXP);
+    Rcpp::traits::input_parameter< std::string >::type matchNomatchSim(matchNomatchSimSEXP);
+    Rcpp::traits::input_parameter< std::string >::type senderTargetSim(senderTargetSimSEXP);
+    __result = Rcpp::wrap(similarityComplexOldCpp(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim));
     return __result;
 END_RCPP
 }

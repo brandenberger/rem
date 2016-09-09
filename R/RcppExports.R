@@ -45,19 +45,3 @@ absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, wei
     .Call('rem_absoluteDiffAverageWeightEventAttributeCpp', PACKAGE = 'rem', sender, target, time, weightvar, eventattributevar, eventattribute, xlog)
 }
 
-triadOldCpp <- function(sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog) {
-    .Call('rem_triadOldCpp', PACKAGE = 'rem', sender, target, time, weightvar, typevar, typeA, typeB, attributevarAB, attrAB, attributevarAI, attrAI, attributevarBI, attrBI, xlog)
-}
-
-fourCycleOldCpp <- function(sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType) {
-    .Call('rem_fourCycleOldCpp', PACKAGE = 'rem', sender, target, typevar, time, weightvar, xlog, attrvarNow, attrNow, attrvarAaj, attrAaj, attrvarBib, attrBib, attrvarCij, attrCij, fourCycleType)
-}
-
-similaritySimpleOldCpp <- function(sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
-    .Call('rem_similaritySimpleOldCpp', PACKAGE = 'rem', sender, target, time, xlog, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
-}
-
-similarityComplexOldCpp <- function(sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim) {
-    .Call('rem_similarityComplexOldCpp', PACKAGE = 'rem', sender, target, time, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, matchNomatchSim, senderTargetSim)
-}
-

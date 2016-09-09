@@ -1,7 +1,7 @@
 Package: rem
 Type: Package
 Title: Relational Event Models (REM)
-Version: 1.2.1
+Version: 1.2.2
 Date: 2016-09-09
 Author: Laurence Brandenberger
 Maintainer: Laurence Brandenberger <laurence.brandenberger@eawag.ch>

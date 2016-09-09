@@ -206,7 +206,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // triadCpp
-double triadCpp(std::vector<std::string> v, std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> typevar, std::string typeA, std::string typeB, std::vector<std::string> attributevarAI, std::string attrAI, std::vector<std::string> attributevarBI, std::string attrBI, double xlog, int i, std::string currentSender, std::string currentTarget, double currentTime);
+double triadCpp(std::vector<std::string> v, std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> typevar, std::string typeA, std::string typeB, std::vector<std::string> attributevarAI, std::string attrAI, std::vector<std::string> attributevarBI, std::string attrBI, double xlog, size_t i, std::string currentSender, std::string currentTarget, double currentTime);
 RcppExport SEXP rem_triadCpp(SEXP vSEXP, SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP typevarSEXP, SEXP typeASEXP, SEXP typeBSEXP, SEXP attributevarAISEXP, SEXP attrAISEXP, SEXP attributevarBISEXP, SEXP attrBISEXP, SEXP xlogSEXP, SEXP iSEXP, SEXP currentSenderSEXP, SEXP currentTargetSEXP, SEXP currentTimeSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
@@ -224,7 +224,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< std::vector<std::string> >::type attributevarBI(attributevarBISEXP);
     Rcpp::traits::input_parameter< std::string >::type attrBI(attrBISEXP);
     Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< int >::type i(iSEXP);
+    Rcpp::traits::input_parameter< size_t >::type i(iSEXP);
     Rcpp::traits::input_parameter< std::string >::type currentSender(currentSenderSEXP);
     Rcpp::traits::input_parameter< std::string >::type currentTarget(currentTargetSEXP);
     Rcpp::traits::input_parameter< double >::type currentTime(currentTimeSEXP);

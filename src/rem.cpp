@@ -1686,7 +1686,7 @@ double triadCpp(
 	std::vector<std::string> attributevarBI,
 	std::string attrBI,
     double xlog, 
-	int i, 
+	size_t i, 
 	std::string currentSender, 
 	std::string currentTarget, 
 	double currentTime) {
@@ -1703,7 +1703,7 @@ double triadCpp(
 	for (size_t j = 0; j < v.size(); j++) {
 		totalweighta = 0.0;
 		totalweightb = 0.0;
-		for ( int z = 0; z < i-1; z++ ) {   
+		for ( size_t z = 0; z < i-1; z++ ) {   
 			weighta = 0.0;
 			weightb = 0.0;
 			//caluculate weighta

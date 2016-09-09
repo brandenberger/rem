@@ -879,7 +879,7 @@ std::vector<std::string> v, // sender-sim: v = who else used b (match= in same w
   size_t i, 
   size_t begin) {
   
-  double result;
+  double result = 0.0;
   std::vector<std::string> x;
   std::vector<std::string> xw;
   std::vector<double> a_positive;
@@ -1037,7 +1037,7 @@ double similaritySimpleCpp(
   size_t i, 
   size_t begin) {
   
-  double result;
+  double result = 0;
   std::vector<std::string> x;
   std::vector<std::string> xw;
   double a_positive;
@@ -1046,7 +1046,7 @@ double similaritySimpleCpp(
   double i_positive;	
   std::vector<std::string> xwneg;
   double totalNumber = 0;
-  double timePLast;
+  double timePLast = 0;
   int counter = 0;
   double totalSim = 0;
   double weightSim;
@@ -1154,7 +1154,7 @@ double similaritySimpleCpp(
       // find time for the time-discount in the simple-similarity equation
       if ( senderTargetSim == "sender"){
         // find time, when actor k used concept $p$ last
-        for (int q = i-1; q >= begin; q--){
+        for (size_t q = i-1; q >= begin; q--){
           if ( matchNomatchSim == "nomatch"){
             if (sender[q] == v[k] && target[q] == currentTarget && time[q] != currentTime &&
                 eventAttributeVar[q] == eventAttribute){
@@ -1171,7 +1171,7 @@ double similaritySimpleCpp(
         }//closes q-loop
       }else if ( senderTargetSim == "target"){
         // find time, when target k was last used by $a$
-          for (int q = i-1; q >= begin; q--){
+          for (size_t q = i-1; q >= begin; q--){
             if (matchNomatchSim == "nomatch"){
               if (target[q] == v[k] && sender[q] == currentSender && time[q] != currentTime &&
                   eventAttributeVar[q] == eventAttribute){
@@ -1228,7 +1228,7 @@ double similarityComplexCpp(
   size_t i, 
   size_t begin) {
   
-  double result;
+  double result = 0.0;
   std::vector<std::string> x;
   std::vector<std::string> xw;
   std::vector<std::string> xwneg;
@@ -1240,7 +1240,7 @@ double similarityComplexCpp(
   std::vector<double> a_sendertarget;
   double timePLast = 0.0;
   int counter = 0;
-  double totalSim;
+  double totalSim = 0.0;
   double weightSim;
   double sumCouplePositive;
   double sumCoupleNegative;
@@ -1691,14 +1691,13 @@ double triadCpp(
 	std::string currentTarget, 
 	double currentTime) {
 		
-		double result = 0.0;
-
+	double result = 0.0;
 	double weighta;
 	double weightb;
 	double totalweighta;
 	double totalweightb;
-	double weightab;
-	double totalweight;
+	double weightab = 0.0;
+	double totalweight = 0.0;
 	
 	// for each entry in v
 	for (size_t j = 0; j < v.size(); j++) {
@@ -1730,7 +1729,7 @@ double triadCpp(
 	//take the squared rood of totalweight
 	result = sqrt(totalweight);
 	return result;
-}
+  }
 
 
 //####################################################################

@@ -3276,7 +3276,7 @@ reciprocityStat <- function(data, time, sender, target, halflife,
   }else{
     #test if weight-var is in ascending order
     if ( is.unsorted(time) ) {
-      stop("'", time, "' is not sorted. Sort data frame according to the event sequence.")
+      stop("'time' is not sorted. Sort data frame according to the event sequence.")
     }
   }
   
@@ -3290,7 +3290,7 @@ reciprocityStat <- function(data, time, sender, target, halflife,
     weight <- rep(1, length(time))
   }
   if ( !is.numeric(weight) ) {
-    stop("'", as.name(weight), "' variable is not numeric.") #TODO: deparse(substitute(eventattributevar)) ?
+    stop("'weight' variable is not numeric.") #TODO: deparse(substitute(eventattributevar)) ?
   }
   
   ## check if event-type inputs are available and correctly specified
@@ -3309,7 +3309,7 @@ reciprocityStat <- function(data, time, sender, target, halflife,
       for ( i in 1:length(eventtypevalue) ){
         if ( length(grep(eventtypevalue[i], eventtypevar)) == 0 ) {
           ##TODO: #deparse(substitute(eventtypevar))
-          stop("Value '", eventtypevalue[i], "' is not an element of '", deparse(substitute(eventtypevar)) , "'.") ##deparse(substitute(eventtypevar))
+          stop("Value '", eventtypevalue[i], "' is not an element of 'eventtypevar'.") ##deparse(substitute(eventtypevar))
         }
       }#closes i-loop  
       if ( length(unique(duplicated(eventtypevalue))) == 2 ) {
@@ -3318,7 +3318,7 @@ reciprocityStat <- function(data, time, sender, target, halflife,
     }else if ( eventtypevalue != "valuematch" & eventtypevalue != "valuemix" ) {
       if ( length(grep(eventtypevalue, eventtypevar)) == 0 ) {
         ##TODO: #deparse(substitute(eventtypevar))
-        stop("Value '", eventtypevalue, "' is not an element of '", deparse(substitute(eventtypevar)) , "'.") ##deparse(substitute(eventtypevar))
+        stop("Value '", eventtypevalue, "' is not an element of 'eventtypevar'.") ##deparse(substitute(eventtypevar))
       }
     }	
   }
@@ -3338,7 +3338,7 @@ reciprocityStat <- function(data, time, sender, target, halflife,
     if ( length(eventfiltervalue) > 0 ){
       for ( i in 1:length(eventfiltervalue) ){
         if ( length(grep(eventfiltervalue[i], eventfiltervar)) == 0 ) {
-          stop("Value '", eventfiltervalue[i], "' is not an element of '", as.name(eventfiltervar), "'.")  ##deparse(substitute(eventattributevar))
+          stop("Value '", eventfiltervalue[i], "' is not an element of 'eventfiltervar'.")  ##deparse(substitute(eventattributevar))
         }
       }#closes i-loop  
       if ( length(unique(duplicated(eventfiltervalue))) == 2 ) {
@@ -4151,7 +4151,7 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
   }else{
     #test if weight-var is in ascending order
     if ( is.unsorted(time) ) {
-      stop("'", time, "' is not sorted. Sort data frame according to the event 
+      stop("'time' is not sorted. Sort data frame according to the event 
            sequence.")
     }
   }
@@ -4169,7 +4169,7 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
     weight <- rep(1, length(time))
   }
   if ( !is.numeric(weight) ) {
-    stop("'", as.name(weight), "' variable is not numeric.")
+    stop("'weight' variable is not numeric.")
   }
   
   ## check if event-type inputs are available and correctly specified
@@ -4194,12 +4194,10 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
            'friend' (or 'enemy') depending on the triad type.")
     }
     if ( length(grep(eventtypevalues[1], eventtypevar)) == 0 ) {
-      stop("First value '", eventtypevalues[1], "' is not an element of '", 
-           deparse(substitute(eventtypevar)) , "'.") 
+      stop("First value '", eventtypevalues[1], "' is not an element of 'eventtypevar'.") 
     }
     if ( length(grep(eventtypevalues[2], eventtypevar)) == 0 ) {
-      stop("Second value '", eventtypevalues[2], "' is not an element of '", 
-           deparse(substitute(eventtypevar)) , "'.") 
+      stop("Second value '", eventtypevalues[2], "' is not an element of 'eventtypevar'.") 
     }
   }
   
@@ -4219,20 +4217,17 @@ triadStat <- function(data, time, sender, target, halflife, weight = NULL,
     # check if eventattributevalue is part of the variable
     if ( is.null(eventfilterAB) == FALSE){
       if ( length(grep(eventfilterAB, eventfiltervar)) == 0 ) {
-        stop("Value '", eventfilterAB, "' is not an element of '", 
-             deparse(substitute(eventfiltervar)) , "'.") 
+        stop("Value '", eventfilterAB, "' is not an element of 'eventfiltervar'.") 
       }
     }
     if ( is.null(eventfilterAI) == FALSE){
       if ( length(grep(eventfilterAI, eventfiltervar)) == 0 ) {
-        stop("Value '", eventfilterAI, "' is not an element of '", 
-             deparse(substitute(eventfiltervar)) , "'.") 
+        stop("Value '", eventfilterAI, "' is not an element of 'eventfiltervar'.") 
       }
     }
     if ( is.null(eventfilterBI) == FALSE){
       if ( length(grep(eventfilterBI, eventfiltervar)) == 0 ) {
-        stop("Value '", eventfilterBI, "' is not an element of '", 
-             deparse(substitute(eventfiltervar)) , "'.") 
+        stop("Value '", eventfilterBI, "' is not an element of 'eventfiltervar'.") 
       }
     }
   }

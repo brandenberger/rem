@@ -1,0 +1,18 @@
+language: r
+
+r:
+  - devel
+  - release
+
+sudo: false
+
+cache: packages
+
+r_check_args: --as-cran
+
+notifications:
+  email:
+    recipients:
+      - laurence.brandenberger@eawag.ch
+    on_success: change
+    on_failure: change

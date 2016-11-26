@@ -31,9 +31,9 @@ has to be sorted in ascending order.}
 \item{target}{ A string (or factor or numeric) variable that represents the target of the event.}
 
 \item{halflife}{ A numeric value that is used in the decay function.
-The vector of past events is weighted by an exponential decay function using the specified halflife. The halflife parameter determins after how long a period the event weigth should be halved. E.g. if \code{halflife = 5}, the weigth of an event that occured 5 units in the past is halved. Smaller halflife values give more importance to more recent events, while larger halflife values should be  used if time does not affect the sequence of events that much.}
+The vector of past events is weighted by an exponential decay function using the specified halflife. The halflife parameter determins after how long a period the event weight should be halved. E.g. if \code{halflife = 5}, the weight of an event that occured 5 units in the past is halved. Smaller halflife values give more importance to more recent events, while larger halflife values should be  used if time does not affect the sequence of events that much.}
 
-\item{weight}{ An optional numeric variable that represents the weigth of each event. If \code{weight = NULL} each event is given an event weigth of \code{1}.
+\item{weight}{ An optional numeric variable that represents the weight of each event. If \code{weight = NULL} each event is given an event weight of \code{1}.
 }
 
 \item{eventtypevar}{ An optional variable that represents the type of the event. Use \code{eventtypevalue} to specify how the \code{eventtypevar} should be used to filter past events.
@@ -178,7 +178,3 @@ dtrem$fourCycle.neg <- fourCycleStat(data = dtrem,
                                      halflife = 20)
 }
 %\keyword{key}
-
-
-
-

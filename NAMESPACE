@@ -1,6 +1,4 @@
 useDynLib(rem)
-import("flexsurv")
-import("survival")
 import("doParallel")
 import("foreach")
 importFrom("Rcpp", evalCpp)

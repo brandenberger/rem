@@ -4622,7 +4622,8 @@ createRemDataset <- function(data, sender, target, eventSequence,
                              end = NULL, endDate = NULL, 
                              timeformat = NULL,
                              atEventTimesOnly = TRUE, untilEventOccurrs = TRUE,
-                             includeAllPossibleEvents = FALSE, possibleEvents = NULL, 
+                             includeAllPossibleEvents = FALSE, 
+                             possibleEvents = NULL, 
                              returnInputData = FALSE){
   
   ## possibleEvents has to be formatted as follows: 
@@ -4647,11 +4648,11 @@ createRemDataset <- function(data, sender, target, eventSequence,
   }
   
   ## check if event.sequence is well defined (numeric and ever-increasing)
-  if ( is.null(eventSequence) ) {
+  if(is.null(eventSequence)){
     stop("No 'eventSequence' argument was provided.")
   }else{
     #test if weight-var is in ascending order
-    if ( is.unsorted(eventSequence) ) {
+    if(is.unsorted(eventSequence)){
       stop("'", eventSequence, "' is not sorted. Sort data frame according to the event sequence.")
     }
   }
@@ -4666,11 +4667,6 @@ createRemDataset <- function(data, sender, target, eventSequence,
   
   ## create return data set
   dataNullEvents <- data.frame()
-  
-  ## if eventSequence is unsorted, report error message
-  if(is.unsorted(eventSequence)){
-    stop('Events are not sorted. Please sort the data before continuing.')
-  }
   
   ## 
   if(isTRUE(includeAllPossibleEvents) & is.null(possibleEvents)){

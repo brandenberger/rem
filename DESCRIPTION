@@ -8,6 +8,6 @@ Maintainer: Laurence Brandenberger <laurence.brandenberger@eawag.ch>
 Description: Calculate endogenous network effects in event sequences and fit relational event models (REM): Using network event sequences (where each tie between a sender and a target in a network is time-stamped), REMs can measure how networks form and evolve over time. Endogenous patterns such as popularity effects, inertia, similarities, cycles or triads can be calculated and analyzed over time.
 License: GPL (>= 2)
 Depends: R (>= 2.14.0)
-Imports: Rcpp, flexsurv, survival, foreach, doParallel
+Imports: Rcpp, foreach, doParallel
 LinkingTo: Rcpp
 Suggests: xergm, texreg, statnet, ggplot2

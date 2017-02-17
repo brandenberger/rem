@@ -17,6 +17,7 @@ degreeStat(data, time, degreevar, halflife,
     degreeOnOtherVar = NULL,
     variablename = "degree", 
     returnData = FALSE, 
+    dataPastEvents = NULL,
     showprogressbar = FALSE, 
     inParallel = FALSE, cluster = NULL)
 }
@@ -48,6 +49,15 @@ degreeStat(data, time, degreevar, halflife,
 \item{variablename}{ An optional value (or values) with the name the degree statistic variable should be given. Default "degree" is used. To be used if \code{returnData = TRUE} or multiple degree statistics are calculated.}
 
 \item{returnData}{ \code{TRUE/FALSE}. Set to \code{FALSE} by default. The new variable(s) are bound directly to the \code{data.frame} provided and the data frame is returned in full.}
+
+\item{dataPastEvents}{ An optional \code{data.frame} with the following variables:
+	column 1 = time variable, 
+	column 2 = degree variable, 
+	column 3 = degree on other variable (or all "1"), 
+	column 4 = event dummy (or all 1), 
+	column 5 = weight variable (or all "1"), 
+	column 6 = event type variable (or all "1"), 
+	column 7 = event filter variable (or all "1").}
 
 \item{showprogressbar}{ \code{TRUE/FALSE}. Can only be set to TRUE if the function is not run in parallel.}
 

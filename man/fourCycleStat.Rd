@@ -16,6 +16,7 @@ fourCycleStat(data, time, sender, target, halflife,
     eventvar = NULL,
     variablename = 'fourCycle',
     returnData = FALSE,
+    dataPastEvents = NULL,
     showprogressbar = FALSE, 
     inParallel = FALSE, cluster = NULL
 )
@@ -31,9 +32,9 @@ has to be sorted in ascending order.}
 \item{target}{ A string (or factor or numeric) variable that represents the target of the event.}
 
 \item{halflife}{ A numeric value that is used in the decay function.
-The vector of past events is weighted by an exponential decay function using the specified halflife. The halflife parameter determins after how long a period the event weigth should be halved. E.g. if \code{halflife = 5}, the weigth of an event that occured 5 units in the past is halved. Smaller halflife values give more importance to more recent events, while larger halflife values should be  used if time does not affect the sequence of events that much.}
+The vector of past events is weighted by an exponential decay function using the specified halflife. The halflife parameter determins after how long a period the event weight should be halved. E.g. if \code{halflife = 5}, the weight of an event that occured 5 units in the past is halved. Smaller halflife values give more importance to more recent events, while larger halflife values should be  used if time does not affect the sequence of events that much.}
 
-\item{weight}{ An optional numeric variable that represents the weigth of each event. If \code{weight = NULL} each event is given an event weigth of \code{1}.
+\item{weight}{ An optional numeric variable that represents the weight of each event. If \code{weight = NULL} each event is given an event weight of \code{1}.
 }
 
 \item{eventtypevar}{ An optional variable that represents the type of the event. Use \code{eventtypevalue} to specify how the \code{eventtypevar} should be used to filter past events.
@@ -58,6 +59,14 @@ paste events should be filtered depending on their attribute. Each distinct edge
 \item{variablename}{ An optional value (or values) with the name the four cycle statistic variable should be given. To be used if \code{returnData = TRUE}.}
 
 \item{returnData}{ \code{TRUE/FALSE}. Set to \code{FALSE} by default. The new  variable(s) are bound directly to the \code{data.frame} provided and the data frame is returned in full.}
+
+\item{dataPastEvents}{ An optional \code{data.frame} with the following variables:
+	column 1 = time variable, 
+	column 2 = sender variable, 
+	column 3 = target on other variable (or all "1"), 
+	column 4 = weight variable (or all "1"), 
+	column 5 = event type variable (or all "1"), 
+	column 6 = event filter variable (or all "1"). Make sure that the data frame does not contain null events. Filter it out for true events only.}
 
 \item{showprogressbar}{\code{TRUE/FALSE}. To be implemented.}
 

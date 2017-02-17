@@ -903,6 +903,7 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                        eventvar = NULL,
                        degreeOnOtherVar = NULL,
                        variablename = "degree", returnData = FALSE, 
+                       dataPastEvents = NULL,
                        showprogressbar = FALSE, 
                        inParallel = FALSE, cluster = NULL){
   
@@ -1036,22 +1037,62 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
   ## calculate part of decay function
   xlog <- log(2)/halflife 
   
-  ## use event-filter if counting process data is used
-  if(is.null(eventvar)){
-    countingProcessVar <- rep(1, length(degreevar))
-  }else{
-    countingProcessVar <- eventvar
+  if(is.null(dataPastEvents)){
+    ## use event-filter if counting process data is used
+    if(is.null(eventvar)){
+      countingProcessVar <- rep(1, length(degreevar))
+    }else{
+      countingProcessVar <- eventvar
+    }
+    ## time
+    pastTimeVar <- time
+    
+    ## weight
+    pastWeightVar <- weight
+    
+    ## eventfiltervar
+    pastEventFilterVar <- eventfiltervar
+    
+    ## eventtypevar
+    pastEventTypeVar <- eventtypevar
+
+    ## specify degreevariable
+    if(is.null(degreeOnOtherVar)){
+      currentEventDegreeVar <- degreevar
+      pastEventDegreeVar <- degreevar
+    }else{
+      currentEventDegreeVar <- degreevar
+      pastEventDegreeVar <- degreeOnOtherVar
+    }
+  }else{ # dataPastEvents is specified:
+    ##
+    if(is.null(eventvar)){
+      countingProcessVar <- rep(1, nrow(dataPastEvents))
+    }else{
+      countingProcessVar <- dataPastEvents[,4]
+    }
+    ## degree
+    if(is.null(degreeOnOtherVar)){
+      currentEventDegreeVar <- degreevar
+      pastEventDegreeVar <- dataPastEvents[,2]
+        # nope doesn't work: dataPastEvents[,which(names(dataPastEvents) == as.name(degreevar) )]
+    }else{
+      currentEventDegreeVar <- degreevar
+      pastEventDegreeVar <- dataPastEvents[,3]
+    }
+    ## time
+    pastTimeVar <- dataPastEvents[,1]
+    
+    ## weight
+    pastWeightVar <- dataPastEvents[,5]
+    
+    ## eventfiltervar
+    pastEventFilterVar <- dataPastEvents[,7]
+    
+    ## eventtypevar
+    pastEventTypeVar <- dataPastEvents[,6]
+    
   }
-  
-  ## specify degreevariable
-  if(is.null(degreeOnOtherVar)){
-    currentEventDegreeVar <- degreevar
-    pastEventDegreeVar <- degreevar
-  }else{
-    currentEventDegreeVar <- degreevar
-    pastEventDegreeVar <- degreeOnOtherVar
-  }
-  
   ## 
   result <- rep(NA, length(degreevar))
   
@@ -1075,14 +1116,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
         res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
           
           ## create vector of times, degreevar--target tie was made before
-          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                      time < time[i] & countingProcessVar == 1]
+          timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                             pastTimeVar < time[i] & countingProcessVar == 1]
           ## get weight
           if(is.null(weight)){
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
-            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                          time < time[i] & countingProcessVar == 1]
+            weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                          pastTimeVar < time[i] & countingProcessVar == 1]
           }
           
           ## run cpp-loop for all times
@@ -1107,14 +1148,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
           
           
           ## create vector of times, degreevar--target tie was made before
-          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                      time < time[i] & countingProcessVar == 1]
+          timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                             pastTimeVar < time[i] & countingProcessVar == 1]
           ## get weight
           if(is.null(weight)){
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
-            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                          time < time[i] & countingProcessVar == 1]
+            weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                 pastTimeVar < time[i] & countingProcessVar == 1]
           }
           
           ## run cpp-loop for all times
@@ -1148,16 +1189,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
         res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
           
           ## create vector of times, sender--target tie was made before
-          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                      time < time[i] & countingProcessVar == 1 &
-                                      eventfiltervar == eventfiltervalue]
+          timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                             pastTimeVar < time[i] & countingProcessVar == 1 &
+                                             pastEventFilterVar == eventfiltervalue]
           ## get weight
           if(is.null(weight)){
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
-            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                          time < time[i] & countingProcessVar == 1 &
-                                          eventfiltervar == eventfiltervalue]
+            weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                 pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                 pastEventFilterVar == eventfiltervalue]
           }
           
           ## run cpp-loop for all times
@@ -1182,16 +1223,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
           
           
           ## create vector of times, sender--target tie was made before
-          timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                      time < time[i] & countingProcessVar == 1 &
-                                      eventfiltervar == eventfiltervalue]
+          timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                             pastTimeVar < time[i] & countingProcessVar == 1 &
+                                      pastEventFilterVar == eventfiltervalue]
           ## get weight
           if(is.null(weight)){
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
-            weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                          time < time[i] & countingProcessVar == 1 &
-                                          eventfiltervar == eventfiltervalue]
+            weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                 pastTimeVar < time[i] & countingProcessVar == 1 &
+                                          pastEventFilterVar == eventfiltervalue]
           }
           
           ## run cpp-loop for all times
@@ -1231,16 +1272,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             
             
             ## create vector of times, sender--target tie was made before
-            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                        time < time[i] & countingProcessVar == 1 &
-                                        eventtypevar == eventtypevar[i]]
+            timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                               pastTimeVar < time[i] & countingProcessVar == 1 &
+                                        pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
-              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == eventtypevar[i]]
+              weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1265,16 +1306,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             
             
             ## create vector of times, degreevar--target tie was made before
-            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                        time < time[i] & countingProcessVar == 1 &
-                                        eventtypevar == eventtypevar[i]]
+            timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                               pastTimeVar < time[i] & countingProcessVar == 1 &
+                                        pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
-              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == eventtypevar[i]]
+              weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1309,18 +1350,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
           res <- foreach::foreach(i=1:length(degreevar), .combine=rbind)%dopar%{
             
             ## create vector of times, sender--target tie was made before
-            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                        time < time[i] & countingProcessVar == 1 &
-                                        eventfiltervar == eventfiltervalue & 
-                                        eventtypevar == eventtypevar[i]]
+            timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                               pastTimeVar < time[i] & countingProcessVar == 1 &
+                                        pastEventFilterVar == eventfiltervalue & 
+                                        pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
-              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventfiltervar == eventfiltervalue & 
-                                            eventtypevar == eventtypevar[i]]
+              weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventFilterVar == eventfiltervalue & 
+                                            pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1345,18 +1386,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             
             
             ## create vector of times, sender--target tie was made before
-            timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                        time < time[i] & countingProcessVar == 1 &
-                                        eventfiltervar == eventfiltervalue & 
-                                        eventtypevar == eventtypevar[i]]
+            timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                               pastTimeVar < time[i] & countingProcessVar == 1 &
+                                        pastEventFilterVar == eventfiltervalue & 
+                                        pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
-              weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventfiltervar == eventfiltervalue &
-                                            eventtypevar == eventtypevar[i]]
+              weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventFilterVar == eventfiltervalue &
+                                            pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1408,16 +1449,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                   if (eventtypevar[i] == a){
                     
                     ## create vector of times, sender--target tie was made before
-                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 & 
-                                                eventtypevar == b]
+                    timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 & 
+                                                pastEventTypeVar == b]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
-                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                    time < time[i] & countingProcessVar == 1 &
-                                                    eventtypevar == b]
+                      weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                           pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                    pastEventTypeVar == b]
                     }
                     
                     ## run cpp-loop for all times
@@ -1448,16 +1489,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     
                     
                     ## create vector of times, sender--target tie was made before
-                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == b]
+                    timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == b]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
-                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                    time < time[i] & countingProcessVar == 1 &
-                                                    eventtypevar == b]
+                      weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                    pastEventTypeVar == b]
                     }
                     
                     ## run cpp-loop for all times
@@ -1493,16 +1534,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
               if (eventtypevar[i] == a){
                 
                 ## create vector of times, sender--target tie was made before
-                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == a]
+                timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == a]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
-                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == a]
+                  weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == a]
                 }
                 
                 ## run cpp-loop for all times
@@ -1533,16 +1574,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 
                 
                 ## create vector of times, sender--target tie was made before
-                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == a]
+                timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == a]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
-                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == a]
+                  weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == a]
                 }
                 
                 ## run cpp-loop for all times
@@ -1595,18 +1636,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                   if (eventtypevar[i] == a){
                     
                     ## create vector of times, degreevar--target tie was made before
-                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 & 
-                                                eventtypevar == b  & 
-                                                eventfiltervar == eventfiltervalue]
+                    timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 & 
+                                                pastEventTypeVar == b  & 
+                                                pastEventFilterVar == eventfiltervalue]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
-                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                    time < time[i] & countingProcessVar == 1 &
-                                                    eventtypevar == b & 
-                                                    eventfiltervar == eventfiltervalue]
+                      weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                           pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                    pastEventTypeVar == b & 
+                                                    pastEventFilterVar == eventfiltervalue]
                     }
                     
                     ## run cpp-loop for all times
@@ -1637,18 +1678,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     
                     
                     ## create vector of times, sender--target tie was made before
-                    timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == b & 
-                                                eventfiltervar == eventfiltervalue]
+                    timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == b & 
+                                                pastEventFilterVar == eventfiltervalue]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
-                      weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                    time < time[i] & countingProcessVar == 1 &
-                                                    eventtypevar == b & 
-                                                    eventfiltervar == eventfiltervalue]
+                      weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                           pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                    pastEventTypeVar == b & 
+                                                    pastEventFilterVar == eventfiltervalue]
                     }
                     
                     ## run cpp-loop for all times
@@ -1684,18 +1725,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
               if (eventtypevar[i] == a){
                 
                 ## create vector of times, degreevar--target tie was made before
-                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == a & 
-                                            eventfiltervar == eventfiltervalue]
+                timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                            pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == a & 
+                                            pastEventFilterVar == eventfiltervalue]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
-                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == a & 
-                                                eventfiltervar == eventfiltervalue]
+                  weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == a & 
+                                                pastEventFilterVar == eventfiltervalue]
                 }
                 
                 ## run cpp-loop for all times
@@ -1726,18 +1767,18 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 
                 
                 ## create vector of times, degreevar--target tie was made before
-                timesIntertiaPast <- time[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            time < time[i] & countingProcessVar == 1 &
-                                            eventtypevar == a & 
-                                            eventfiltervar == eventfiltervalue]
+                timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                            pastEventTypeVar == a & 
+                                            pastEventFilterVar == eventfiltervalue]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
-                  weightInertiaPast <- weight[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                time < time[i] & countingProcessVar == 1 &
-                                                eventtypevar == a & 
-                                                eventfiltervar == eventfiltervalue]
+                  weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
+                                                       pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                pastEventTypeVar == a & 
+                                                pastEventFilterVar == eventfiltervalue]
                 }
                 
                 ## run cpp-loop for all times
@@ -1790,6 +1831,7 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
                           eventfilterIB = NULL, eventfilterIJ = NULL, 
                           eventvar = NULL,
                           variablename = 'fourCycle', returnData = FALSE, 
+                          dataPastEvents = NULL,
                           showprogressbar = FALSE, 
                           inParallel = FALSE, cluster = NULL){
   
@@ -1932,86 +1974,131 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
   xlog <- log(2)/halflife 
   
   ## prepare the data set
-  if(is.null(eventvar)){
-    senderLoop <- sender
-    targetLoop <- target
-    weightLoop <- weight
-    timeLoop <- time
+  if(is.null(dataPastEvents)){
+    ## prepare the data set
+    if(is.null(eventvar)){
+      senderLoop <- sender
+      targetLoop <- target
+      weightLoop <- weight
+      timeLoop <- time
+      if(is.null(eventtypevar)){
+        eventtypevar <- rep("1", length(sender)) # if not given, define at as 1 for each event
+        eventtypevarLoop <- rep("1", length(sender))
+        eventtypevalueLoop <- 'standard'
+      }else{
+        eventtypevarLoop <- eventtypevar
+        eventtypevalueLoop <- eventtypevalue
+      }
+      if(is.null(eventfilterAB)){
+        eventfiltervarABLoop <- rep("1", length(sender))
+        eventfilterABLoop <- "1"
+      }else{
+        eventfiltervarABLoop <- eventfiltervar
+        eventfilterABLoop <- eventfilterAB
+      }
+      if(is.null(eventfilterAJ)){
+        eventfiltervarAJLoop <- rep("1", length(sender))
+        eventfilterAJLoop <- "1"
+      }else{
+        eventfiltervarAJLoop <- eventfiltervar
+        eventfilterAJLoop <- eventfilterAJ
+      }
+      if(is.null(eventfilterIB)){
+        eventfiltervarIBLoop <- rep("1", length(sender))
+        eventfilterIBLoop <- "1"
+      }else{
+        eventfiltervarIBLoop <- eventfiltervar
+        eventfilterIBLoop <- eventfilterIB
+      }
+      if(is.null(eventfilterIJ)){
+        eventfiltervarIJLoop <- rep("1", length(sender))
+        eventfilterIJLoop <- "1"
+      }else{
+        eventfiltervarIJLoop <- eventfiltervar
+        eventfilterIJLoop <- eventfilterIJ
+      }
+    }else{ # counting process data is used
+      senderLoop <- sender[eventvar == 1]
+      targetLoop <- target[eventvar == 1]
+      weightLoop <- weight[eventvar == 1]
+      timeLoop <- time[eventvar == 1]
+      if(is.null(eventtypevar)){
+        eventtypevar <- rep("1", length(sender))
+        eventtypevarLoop <- rep("1", length(senderLoop))
+        eventtypevalueLoop <- 'standard'
+      }else{
+        eventtypevarLoop <- eventtypevar[eventvar == 1]
+        eventtypevalueLoop <- eventtypevalue
+      }
+      if(is.null(eventfilterAB)){
+        eventfiltervarABLoop <- rep("1", length(sender)) # same length als sender
+        eventfilterABLoop <- "1"
+      }else{
+        eventfiltervarABLoop <- eventfiltervar # same length as sender
+        eventfilterABLoop <- eventfilterAB
+      }
+      if(is.null(eventfilterAJ)){
+        eventfiltervarAJLoop <- rep("1", length(senderLoop))
+        eventfilterAJLoop <- "1"
+      }else{
+        eventfiltervarAJLoop <- eventfiltervar[eventvar == 1]
+        eventfilterAJLoop <- eventfilterAJ
+      }
+      if(is.null(eventfilterIB)){
+        eventfiltervarIBLoop <- rep("1", length(senderLoop))
+        eventfilterIBLoop <- "1"
+      }else{
+        eventfiltervarIBLoop <- eventfiltervar[eventvar == 1]
+        eventfilterIBLoop <- eventfilterIB
+      }
+      if(is.null(eventfilterIJ)){
+        eventfiltervarIJLoop <- rep("1", length(senderLoop))
+        eventfilterIJLoop <- "1"
+      }else{
+        eventfiltervarIJLoop <- eventfiltervar[eventvar == 1]
+        eventfilterIJLoop <- eventfilterIJ
+      }
+    }
+  }else{ #dataPastEvents is defined: 
+    ## prepare the data set
+    senderLoop <- dataPastEvents[,2]
+    targetLoop <- dataPastEvents[,3]
+    weightLoop <- dataPastEvents[,4]
+    timeLoop <- dataPastEvents[,1]
     if(is.null(eventtypevar)){
       eventtypevar <- rep("1", length(sender)) # if not given, define at as 1 for each event
-      eventtypevarLoop <- rep("1", length(sender))
+      eventtypevarLoop <- rep("1", nrow(dataPastEvents))
       eventtypevalueLoop <- 'standard'
     }else{
-      eventtypevarLoop <- eventtypevar
+      eventtypevarLoop <- dataPastEvents[,5]
       eventtypevalueLoop <- eventtypevalue
     }
     if(is.null(eventfilterAB)){
-      eventfiltervarABLoop <- rep("1", length(sender))
+      eventfiltervarABLoop <- rep("1", nrow(dataPastEvents))
       eventfilterABLoop <- "1"
     }else{
-      eventfiltervarABLoop <- eventfiltervar
+      eventfiltervarABLoop <- dataPastEvents[,6]
       eventfilterABLoop <- eventfilterAB
     }
     if(is.null(eventfilterAJ)){
-      eventfiltervarAJLoop <- rep("1", length(sender))
+      eventfiltervarAJLoop <- rep("1", nrow(dataPastEvents))
       eventfilterAJLoop <- "1"
     }else{
-      eventfiltervarAJLoop <- eventfiltervar
+      eventfiltervarAJLoop <- dataPastEvents[,6]
       eventfilterAJLoop <- eventfilterAJ
     }
     if(is.null(eventfilterIB)){
-      eventfiltervarIBLoop <- rep("1", length(sender))
+      eventfiltervarIBLoop <- rep("1", nrow(dataPastEvents))
       eventfilterIBLoop <- "1"
     }else{
-      eventfiltervarIBLoop <- eventfiltervar
+      eventfiltervarIBLoop <- dataPastEvents[,6]
       eventfilterIBLoop <- eventfilterIB
     }
     if(is.null(eventfilterIJ)){
-      eventfiltervarIJLoop <- rep("1", length(sender))
+      eventfiltervarIJLoop <- rep("1", nrow(dataPastEvents))
       eventfilterIJLoop <- "1"
     }else{
-      eventfiltervarIJLoop <- eventfiltervar
-      eventfilterIJLoop <- eventfilterIJ
-    }
-  }else{ # counting process data is used
-    senderLoop <- sender[eventvar == 1]
-    targetLoop <- target[eventvar == 1]
-    weightLoop <- weight[eventvar == 1]
-    timeLoop <- time[eventvar == 1]
-    if(is.null(eventtypevar)){
-      eventtypevar <- rep("1", length(sender))
-      eventtypevarLoop <- rep("1", length(senderLoop))
-      eventtypevalueLoop <- 'standard'
-    }else{
-      eventtypevarLoop <- eventtypevar[eventvar == 1]
-      eventtypevalueLoop <- eventtypevalue
-    }
-    if(is.null(eventfilterAB)){
-      eventfiltervarABLoop <- rep("1", length(sender)) # same length als sender
-      eventfilterABLoop <- "1"
-    }else{
-      eventfiltervarABLoop <- eventfiltervar # same length as sender
-      eventfilterABLoop <- eventfilterAB
-    }
-    if(is.null(eventfilterAJ)){
-      eventfiltervarAJLoop <- rep("1", length(senderLoop))
-      eventfilterAJLoop <- "1"
-    }else{
-      eventfiltervarAJLoop <- eventfiltervar[eventvar == 1]
-      eventfilterAJLoop <- eventfilterAJ
-    }
-    if(is.null(eventfilterIB)){
-      eventfiltervarIBLoop <- rep("1", length(senderLoop))
-      eventfilterIBLoop <- "1"
-    }else{
-      eventfiltervarIBLoop <- eventfiltervar[eventvar == 1]
-      eventfilterIBLoop <- eventfilterIB
-    }
-    if(is.null(eventfilterIJ)){
-      eventfiltervarIJLoop <- rep("1", length(senderLoop))
-      eventfilterIJLoop <- "1"
-    }else{
-      eventfiltervarIJLoop <- eventfiltervar[eventvar == 1]
+      eventfiltervarIJLoop <- dataPastEvents[,6]
       eventfilterIJLoop <- eventfilterIJ
     }
   }
@@ -2064,11 +2151,7 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
           result <- 0
         }else{
           # find i in reduced data set
-          if(is.null(eventvar)){
-            iLoop <- i-1 # bc cpp-loops start at 0 not 1
-          }else{
-            iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
-          }
+          iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
           
           ## cpp-loop
           result <- fourCycleCpp(senderLoop, sender[i], targetLoop, target[i], 
@@ -2192,6 +2275,7 @@ similarityStat <- function(data, time, sender, target,
                            eventvar = NULL,
                            variablename = "similarity", 
                            returnData = FALSE, 
+                           dataPastEvents = NULL,
                            showprogressbar = FALSE, 
                            inParallel = FALSE, cluster = NULL){
   
@@ -2330,44 +2414,66 @@ similarityStat <- function(data, time, sender, target,
   xlog <- log(2)/halflifeLastEvent 
 
   ## prepare data set
-  if(is.null(eventvar)){
-    # sender, target, time
-    senderLoop <- sender
-    targetLoop <- target
-    timeLoop <- time
-    # eventtypevar
-    if(is.null(eventtypevar)){
-      eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
-      eventtypevarLoop <- rep("1", length(sender))
-    }else{
-      eventtypevarLoop <- eventtypevar
+  if(is.null(dataPastEvents)){
+    if(is.null(eventvar)){
+      # sender, target, time
+      senderLoop <- sender
+      targetLoop <- target
+      timeLoop <- time
+      # eventtypevar
+      if(is.null(eventtypevar)){
+        eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
+        eventtypevarLoop <- rep("1", length(sender))
+      }else{
+        eventtypevarLoop <- eventtypevar
+      }
+      # eventfiltervar
+      if(is.null(eventfiltervar)){
+        eventfiltervarLoop <- rep("1", length(sender))
+        eventfiltervalueLoop <- "1"
+      }else{
+        eventfiltervarLoop <- eventfiltervar
+        eventfiltervalueLoop <- eventfiltervalue
+      }
+    }else{ # if eventvar is specified
+      # sender, target, time
+      senderLoop <- sender[eventvar == 1]
+      targetLoop <- target[eventvar == 1]
+      timeLoop <- time[eventvar == 1]
+      # eventtypevar
+      if(is.null(eventtypevar)){
+        eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
+        eventtypevarLoop <- rep("1", length(senderLoop))
+      }else{
+        eventtypevarLoop <- eventtypevar[eventvar == 1]
+      }
+      # eventfiltervar
+      if(is.null(eventfiltervar)){
+        eventfiltervarLoop <- rep("1", length(senderLoop))
+        eventfiltervalueLoop <- "1"
+      }else{
+        eventfiltervarLoop <- eventfiltervar[eventvar == 1]
+        eventfiltervalueLoop <- eventfiltervalue
+      }
     }
-    # eventfiltervar
-    if(is.null(eventfiltervar)){
-      eventfiltervarLoop <- rep("1", length(sender))
-      eventfiltervalueLoop <- "1"
-    }else{
-      eventfiltervarLoop <- eventfiltervar
-      eventfiltervalueLoop <- eventfiltervalue
-    }
-  }else{ # if eventvar is specified
+  }else{ #data Past events are provided
     # sender, target, time
-    senderLoop <- sender[eventvar == 1]
-    targetLoop <- target[eventvar == 1]
-    timeLoop <- time[eventvar == 1]
+    senderLoop <- dataPastEvents[,2]
+    targetLoop <- dataPastEvents[,3]
+    timeLoop <- dataPastEvents[,1]
     # eventtypevar
     if(is.null(eventtypevar)){
       eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
       eventtypevarLoop <- rep("1", length(senderLoop))
     }else{
-      eventtypevarLoop <- eventtypevar[eventvar == 1]
+      eventtypevarLoop <- dataPastEvents[,4]
     }
     # eventfiltervar
     if(is.null(eventfiltervar)){
       eventfiltervarLoop <- rep("1", length(senderLoop))
       eventfiltervalueLoop <- "1"
     }else{
-      eventfiltervarLoop <- eventfiltervar[eventvar == 1]
+      eventfiltervarLoop <- dataPastEvents[,5]
       eventfiltervalueLoop <- eventfiltervalue
     }
   }
@@ -2419,12 +2525,9 @@ similarityStat <- function(data, time, sender, target,
       if(length(v) == 0 | length(w) == 0){
         result <- 0
       }else{
-        # find i in reduced data set
-        if(is.null(eventvar)){
-          iLoop <- i-1 # bc cpp-loops start at 0 not 1
-        }else{
-          iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
-        }
+        # find i in (reduced) data set
+        
+        iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
         
         ## hand over to cpp
         if(senderOrTarget == 'sender' & is.null(eventtypevar)){
@@ -5023,5 +5126,5 @@ timeToEvent <- function(time, type = 'time-to-next-event',
   
   ## 
   return(timeToEventVar)
-}
+  }
 

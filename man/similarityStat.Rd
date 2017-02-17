@@ -16,6 +16,7 @@ similarityStat(data, time, sender, target,
     eventvar = NULL,
     variablename = 'similarity',
     returnData = FALSE, 
+    dataPastEvents = NULL,
     showprogressbar = FALSE, 
     inParallel = FALSE, cluster = NULL
 )
@@ -49,6 +50,14 @@ similarityStat(data, time, sender, target,
 \item{variablename}{ An optional value (or values) with the name the similarity statistic variable should be given. To be used if \code{returnData = TRUE}.}
 
 \item{returnData}{ \code{TRUE/FALSE}. Set to \code{FALSE} by default. The new  variable(s) are bound directly to the \code{data.frame} provided and the data frame is returned in full.}
+
+\item{dataPastEvents}{ An optional \code{data.frame} with the following variables:
+	column 1 = time variable, 
+	column 2 = sender variable, 
+	column 3 = target on other variable (or all "1"), 
+	column 4 = event type variable (or all "1"), 
+	column 5 = event filter variable (or all "1"). Make sure that the data frame does not contain null events. Filter it out for true events only.}
+
 
 \item{showprogressbar}{\code{TRUE/FALSE}. To be implemented.}
 

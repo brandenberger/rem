@@ -152,9 +152,16 @@ dt <- eventSequence(datevar = dt$time, dateformat = "\%y\%m\%d",
                     sortData = TRUE)
 
 # create counting process data set (with null-events) - conditional logit setting
-dtrem <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
+dts <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
                           eventAttribute = dt$type, 
-                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE)
+                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE, 
+						  returnInputData = TRUE)
+## divide up the results: counting process data = 1, original data = 2
+dtrem <- dts[[1]]
+dt <- dts[[2]]
+## merge all necessary event attribute variables back in
+dtrem$type <- dt$type[match(dtrem$eventID, dt$eventID)]
+dtrem$important <- dt$important[match(dtrem$eventID, dt$eventID)]
 # manually sort the data set
 dtrem <- dtrem[order(dtrem$eventTime), ]
 
@@ -163,13 +170,13 @@ dtrem$sender.outdegree <- degreeStat(data = dtrem,
                                   time = dtrem$eventTime, 
                                   degreevar = dtrem$sender, 
                                   halflife = 2, 
-                                  eventvar = dtrem$eventdummy,
+                                  eventvar = dtrem$eventDummy,
                                   returnData = FALSE)
 
 # plot sender-outdegree over time
 library("ggplot2")
 ggplot(dtrem, aes(eventTime, sender.outdegree, 
-                  group = factor(eventdummy), color = factor(eventdummy) ) ) +
+                  group = factor(eventDummy), color = factor(eventDummy) ) ) +
   geom_point()+ geom_smooth() 
 
 # calculate sender-indegree statistic
@@ -177,7 +184,7 @@ dtrem$sender.indegree <- degreeStat(data = dtrem,
                                     time = dtrem$eventTime, 
                                     degreevar = dtrem$sender, 
                                     halflife = 2, 
-                                    eventvar = dtrem$eventdummy,
+                                    eventvar = dtrem$eventDummy,
                                     degreeOnOtherVar = dtrem$target,
                                     returnData = FALSE)
 
@@ -186,7 +193,7 @@ dtrem$target.indegree <- degreeStat(data = dtrem,
                                      time = dtrem$eventTime, 
                                      degreevar = dtrem$target, 
                                      halflife = 2, 
-                                     eventvar = dtrem$eventdummy,
+                                     eventvar = dtrem$eventDummy,
                                      returnData = FALSE)
 
 # calculate target-outdegree statistic
@@ -194,7 +201,7 @@ dtrem$target.outdegree <- degreeStat(data = dtrem,
                                     time = dtrem$eventTime, 
                                     degreevar = dtrem$target, 
                                     halflife = 2, 
-                                    eventvar = dtrem$eventdummy,
+                                    eventvar = dtrem$eventDummy,
                                     degreeOnOtherVar = dtrem$sender,
                                     returnData = FALSE)
 
@@ -205,7 +212,7 @@ dtrem$target.indegree.tm <- degreeStat(data = dtrem,
                                     halflife = 2, 
                                     eventtypevar = dtrem$type, 
                                     eventtypevalue = "valuematch",
-                                    eventvar = dtrem$eventdummy,
+                                    eventvar = dtrem$eventDummy,
                                     returnData = FALSE)
 }
 %\keyword{key}

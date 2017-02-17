@@ -158,9 +158,16 @@ dt <- eventSequence(datevar = dt$time, dateformat = "\%y\%m\%d",
                     sortData = TRUE)
 
 # create counting process data set (with null-events) - conditional logit setting
-dtrem <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
+dts <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
                           eventAttribute = dt$type, 
-                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE)
+                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE, 
+						  returnInputData = TRUE)
+## divide up the results: counting process data = 1, original data = 2
+dtrem <- dts[[1]]
+dt <- dts[[2]]
+## merge all necessary event attribute variables back in
+dtrem$type <- dt$type[match(dtrem$eventID, dt$eventID)]
+dtrem$important <- dt$important[match(dtrem$eventID, dt$eventID)]
 # manually sort the data set
 dtrem <- dtrem[order(dtrem$eventTime), ]
 
@@ -169,7 +176,7 @@ dtrem$s.sim.av <- similarityStat(data = dtrem,
                               time = dtrem$eventTime,
                               sender = dtrem$sender, 
                               target = dtrem$target, 
-                              eventvar = dtrem$eventdummy,
+                              eventvar = dtrem$eventDummy,
                               senderOrTarget = "sender", 
                               whichSimilarity = "average")
 
@@ -178,7 +185,7 @@ dtrem$t.sim.av <- similarityStat(data = dtrem,
                                  time = dtrem$eventTime,
                                  sender = dtrem$sender, 
                                  target = dtrem$target, 
-                                 eventvar = dtrem$eventdummy,
+                                 eventvar = dtrem$eventDummy,
                                  senderOrTarget = "target", 
                                  whichSimilarity = "average")
 
@@ -191,7 +198,7 @@ dtrem$s.sim.hl2 <- similarityStat(data = dtrem,
                                  time = dtrem$eventTime,
                                  sender = dtrem$sender, 
                                  target = dtrem$target, 
-                                 eventvar = dtrem$eventdummy,
+                                 eventvar = dtrem$eventDummy,
                                  senderOrTarget = "sender", 
                                  halflifeLastEvent = 2)
 
@@ -208,7 +215,7 @@ dtrem$s.sim.hl2.hl1 <- similarityStat(data = dtrem,
                                   time = dtrem$eventTime,
                                   sender = dtrem$sender, 
                                   target = dtrem$target, 
-                                  eventvar = dtrem$eventdummy,
+                                  eventvar = dtrem$eventDummy,
                                   senderOrTarget = "sender", 
                                   halflifeLastEvent = 2, 
                                   halflifeTimeBetweenEvents = 1)

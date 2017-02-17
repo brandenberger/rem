@@ -143,16 +143,21 @@ dt <- eventSequence(datevar = dt$time, dateformat = "\%y\%m\%d",
                     sortData = TRUE)
 
 # create counting process data set (with null-events) - conditional logit setting
-dtrem <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
+dts <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
                           eventAttribute = dt$type, 
-                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE)
+                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE, 
+						  returnInputData = TRUE)
+dtrem <- dts[[1]]
+dt <- dts[[2]]
 # manually sort the data set
 dtrem <- dtrem[order(dtrem$eventTime), ]
+# merge type-variable back in
+dtrem$type <- dt$type[match(dtrem$eventID, dt$eventID)]
 
 # calculate triad statistic
 dtrem$triad <- triadStat(data = dtrem, time = dtrem$eventTime, 
                       sender = dtrem$sender, target = dtrem$target, 
-                      eventvar = dtrem$eventdummy,
+                      eventvar = dtrem$eventDummy,
                       halflife = 2)
 
 # calculate friend-of-friend statistic
@@ -161,7 +166,7 @@ dtrem$triad.fof <- triadStat(data = dtrem, time = dtrem$eventTime,
                           halflife = 2, eventtypevar = dtrem$type, 
                           eventtypevalues = c("cooperation",
                                               "cooperation"), 
-                          eventvar = dtrem$eventdummy)
+                          eventvar = dtrem$eventDummy)
 
 # calculate friend-of-enemy statistic
 dtrem$triad.foe <- triadStat(data = dtrem, time = dtrem$eventTime, 
@@ -169,7 +174,7 @@ dtrem$triad.foe <- triadStat(data = dtrem, time = dtrem$eventTime,
                              halflife = 2, eventtypevar = dtrem$type, 
                              eventtypevalues = c("conflict",
                                                  "cooperation"), 
-                             eventvar = dtrem$eventdummy)
+                             eventvar = dtrem$eventDummy)
 
 # calculate enemy-of-friend statistic
 dtrem$triad.eof <- triadStat(data = dtrem, time = dtrem$eventTime, 
@@ -177,7 +182,7 @@ dtrem$triad.eof <- triadStat(data = dtrem, time = dtrem$eventTime,
                              halflife = 2, eventtypevar = dtrem$type, 
                              eventtypevalues = c("cooperation",
                                                  "conflict"), 
-                             eventvar = dtrem$eventdummy)
+                             eventvar = dtrem$eventDummy)
 
 # calculate enemy-of-enemy statistic
 dtrem$triad.eoe <- triadStat(data = dtrem, time = dtrem$eventTime, 
@@ -185,7 +190,7 @@ dtrem$triad.eoe <- triadStat(data = dtrem, time = dtrem$eventTime,
                              halflife = 2, eventtypevar = dtrem$type, 
                              eventtypevalues = c("conflict",
                                                  "conflict"), 
-                             eventvar = dtrem$eventdummy)
+                             eventvar = dtrem$eventDummy)
 }
 %\keyword{key}
 

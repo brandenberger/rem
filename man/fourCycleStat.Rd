@@ -145,10 +145,16 @@ dt <- eventSequence(datevar = dt$time, dateformat = '\%d.\%m.\%y',
                     sortData = TRUE)
 
 # create counting process data set (with null-events) - conditional logit setting
-dtrem <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
+dts <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
                           eventAttribute = dt$type, 
-                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE)
-
+                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE, 
+						  returnInputData = TRUE)
+## divide up the results: counting process data = 1, original data = 2
+dtrem <- dts[[1]]
+dt <- dts[[2]]
+## merge all necessary event attribute variables back in
+dtrem$type <- dt$type[match(dtrem$eventID, dt$eventID)]
+dtrem$important <- dt$important[match(dtrem$eventID, dt$eventID)]
 # manually sort the data set
 dtrem <- dtrem[order(dtrem$eventTime), ]
 
@@ -157,13 +163,13 @@ dtrem$fourCycle <- fourCycleStat(data = dtrem,
                               time = dtrem$eventTime, 
                               sender = dtrem$sender, 
                               target = dtrem$target, 
-                              eventvar = dtrem$eventdummy,
+                              eventvar = dtrem$eventDummy,
                               halflife = 20)
 
 # plot closing four-cycles over time:
 library("ggplot2")
 ggplot(dtrem, aes (eventTime, fourCycle,
-                group = factor(eventdummy), color = factor(eventdummy)) ) +
+                group = factor(eventDummy), color = factor(eventDummy)) ) +
   geom_point()+ geom_smooth() 
 
 # calculate positive closing four-cycles: general support
@@ -171,7 +177,7 @@ dtrem$fourCycle.pos <- fourCycleStat(data = dtrem,
                                  time = dtrem$eventTime, 
                                  sender = dtrem$sender, 
                                  target = dtrem$target, 
-                                 eventvar = dtrem$eventdummy,
+                                 eventvar = dtrem$eventDummy,
                                  eventtypevar = dtrem$type, 
                                  eventtypevalue = 'positive',
                                  halflife = 20)
@@ -181,7 +187,7 @@ dtrem$fourCycle.neg <- fourCycleStat(data = dtrem,
                                      time = dtrem$eventTime, 
                                      sender = dtrem$sender, 
                                      target = dtrem$target, 
-                                     eventvar = dtrem$eventdummy,
+                                     eventvar = dtrem$eventDummy,
                                      eventtypevar = dtrem$type, 
                                      eventtypevalue = 'negative',
                                      halflife = 20)

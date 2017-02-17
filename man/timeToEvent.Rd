@@ -59,7 +59,7 @@ dt.seq <- eventSequence(dt$date, dateformat = '\%d.\%m.\%y', data = dt,
                     returnDateSequenceData = TRUE)
 
 ## create counting process data set
-dt.rem <- createRemDataset(
+dts <- createRemDataset(
 	data = dt, sender = dt$sender, target = dt$target, 
 	eventSequence = dt$event.seq.cont, 
 	eventAttribute = NULL, time = NULL, 
@@ -68,16 +68,26 @@ dt.rem <- createRemDataset(
 	timeformat = NULL, atEventTimesOnly = TRUE, 
 	untilEventOccurrs = TRUE,
 	includeAllPossibleEvents = FALSE, 
-	possibleEvents = NULL, returnInputData = FALSE)
+	possibleEvents = NULL, returnInputData = TRUE)	
+## divide up the results: counting process data = 1, original data = 2
+dt.rem <- dts[[1]]
+dt <- dts[[2]]
+
+## merge all necessary event attribute variables back in
+dt.rem$targetAvailableSince <- dt$targetAvailableSince[match(dt.rem$eventID, 
+	dt$eventID)]
+dt.rem$dateTargetAvailable <- dt$dateTargetAvailable[match(dt.rem$eventID, 
+	dt$eventID)]
 
 ## add dates to the eventTime
-dt.rem$eventDate <- dt.seq$date.sequence[match(dt.rem$eventTime, dt.seq$event.sequence)]
+dt.rem$eventDate <- dt.seq$date.sequence[match(dt.rem$eventTime,
+	dt.seq$event.sequence)]
 
 ## sort the dataframe according to eventTime
 dt.rem <- dt.rem[order(dt.rem$eventTime), ]
 
 ## 1. numeric, time-to-next-event
-dt.rem$timeToNextEvent <- timeToEvent(dt.rem$eventTime)
+dt.rem$timeToNextEvent <- timeToEvent(as.integer(dt.rem$eventTime))
 
 ## 2. numeric, time-since
 dt.rem$timeSince <- timeToEvent(dt.rem$eventTime, 

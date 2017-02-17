@@ -127,9 +127,16 @@ dt <- eventSequence(datevar = dt$time, dateformat = "\%y\%m\%d",
                     sortData = TRUE)
 
 # create counting process data set (with null-events) - conditional logit setting
-dtrem <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
+dts <- createRemDataset(dt, dt$sender, dt$target, dt$event.seq.cont, 
                           eventAttribute = dt$type, 
-                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE)
+                          atEventTimesOnly = TRUE, untilEventOccurrs = TRUE, 
+						  returnInputData = TRUE)
+## divide up the results: counting process data = 1, original data = 2
+dtrem <- dts[[1]]
+dt <- dts[[2]]
+## merge all necessary event attribute variables back in
+dtrem$type <- dt$type[match(dtrem$eventID, dt$eventID)]
+dtrem$important <- dt$important[match(dtrem$eventID, dt$eventID)]
 # manually sort the data set
 dtrem <- dtrem[order(dtrem$eventTime), ]
 
@@ -138,13 +145,13 @@ dtrem$recip <- reciprocityStat(data = dtrem,
                             time = dtrem$eventTime, 
                             sender = dtrem$sender, 
                             target = dtrem$target,
-                            eventvar = dtrem$eventdummy,
+                            eventvar = dtrem$eventDummy,
                             halflife = 2)
 
 # plot sender-outdegree over time
 library("ggplot2")
 ggplot(dtrem, aes(eventTime, recip, 
-               group = factor(eventdummy), color = factor(eventdummy)) ) +
+               group = factor(eventDummy), color = factor(eventDummy)) ) +
   geom_point()+ geom_smooth() 
 
 # calculate reciprocity statistic with typematch
@@ -154,7 +161,7 @@ dtrem$recip.typematch <- reciprocityStat(data = dtrem,
                                time = dtrem$eventTime, 
                                sender = dtrem$sender, 
                                target = dtrem$target,
-                               eventvar = dtrem$eventdummy,
+                               eventvar = dtrem$eventDummy,
                                eventtypevar = dtrem$type,
                                eventtypevalue = 'valuematch',
                                halflife = 2)
@@ -164,7 +171,7 @@ dtrem <- reciprocityStat(data = dtrem,
                          time = dtrem$eventTime, 
                          sender = dtrem$sender, 
                          target = dtrem$target,
-                         eventvar = dtrem$eventdummy,
+                         eventvar = dtrem$eventDummy,
                          eventtypevar = dtrem$type,
                          eventtypevalue = 'valuemix',
                          halflife = 2, 
@@ -175,7 +182,7 @@ dtrem$recip.filtered <- reciprocityStat(data = dtrem,
                                time = dtrem$eventTime, 
                                sender = dtrem$sender, 
                                target = dtrem$target,
-                               eventvar = dtrem$eventdummy,
+                               eventvar = dtrem$eventDummy,
                                eventfiltervar = dtrem$important, 
                                eventfiltervalue = 'important',
                                halflife = 2)

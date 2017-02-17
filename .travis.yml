@@ -1,4 +1,4 @@
-language: r
+language: R
 
 r:
   - devel

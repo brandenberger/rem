@@ -41,6 +41,10 @@ weightTimesSummationCpp <- function(pastSenderTimes, xlog, currentTime, weightva
     .Call('rem_weightTimesSummationCpp', PACKAGE = 'rem', pastSenderTimes, xlog, currentTime, weightvar)
 }
 
+createNullEvents <- function(eventID, sender, target, eventAttribute, time, start, end, allEventTimes) {
+    .Call('rem_createNullEvents', PACKAGE = 'rem', eventID, sender, target, eventAttribute, time, start, end, allEventTimes)
+}
+
 absoluteDiffAverageWeightEventAttributeCpp <- function(sender, target, time, weightvar, eventattributevar, eventattribute, xlog) {
     .Call('rem_absoluteDiffAverageWeightEventAttributeCpp', PACKAGE = 'rem', sender, target, time, weightvar, eventattributevar, eventattribute, xlog)
 }

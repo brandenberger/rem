@@ -246,6 +246,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// createNullEvents
+DataFrame createNullEvents(std::vector<std::string> eventID, std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> eventAttribute, std::vector<double> time, std::vector<double> start, std::vector<double> end, std::vector<double> allEventTimes);
+RcppExport SEXP rem_createNullEvents(SEXP eventIDSEXP, SEXP senderSEXP, SEXP targetSEXP, SEXP eventAttributeSEXP, SEXP timeSEXP, SEXP startSEXP, SEXP endSEXP, SEXP allEventTimesSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventID(eventIDSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
+    Rcpp::traits::input_parameter< std::vector<std::string> >::type eventAttribute(eventAttributeSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type time(timeSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type start(startSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type end(endSEXP);
+    Rcpp::traits::input_parameter< std::vector<double> >::type allEventTimes(allEventTimesSEXP);
+    rcpp_result_gen = Rcpp::wrap(createNullEvents(eventID, sender, target, eventAttribute, time, start, end, allEventTimes));
+    return rcpp_result_gen;
+END_RCPP
+}
 // absoluteDiffAverageWeightEventAttributeCpp
 NumericVector absoluteDiffAverageWeightEventAttributeCpp(std::vector<std::string> sender, std::vector<std::string> target, NumericVector time, NumericVector weightvar, std::vector<std::string> eventattributevar, std::string eventattribute, double xlog);
 RcppExport SEXP rem_absoluteDiffAverageWeightEventAttributeCpp(SEXP senderSEXP, SEXP targetSEXP, SEXP timeSEXP, SEXP weightvarSEXP, SEXP eventattributevarSEXP, SEXP eventattributeSEXP, SEXP xlogSEXP) {

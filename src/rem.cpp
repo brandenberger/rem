@@ -1753,3 +1753,65 @@ double weightTimesSummationCpp(
   result = totalWeight;
   return result;
 }
+
+
+//####################################################################
+// [[Rcpp::export]]
+DataFrame createNullEvents(
+    std::vector<std::string> eventID,
+    std::vector<std::string> sender,
+    std::vector<std::string> target,
+    std::vector<std::string> eventAttribute,
+    std::vector<double> time,
+    std::vector<double> start,
+    std::vector<double> end, 
+    std::vector<double> allEventTimes) {
+  
+  DataFrame result;
+  std::vector<std::string> eventIDNew;
+  std::vector<std::string> senderNew;
+  std::vector<std::string> targetNew;
+  std::vector<std::string> eventAttributeNew;
+  NumericVector startNew;
+  NumericVector endNew;
+  NumericVector eventTime;
+  NumericVector eventDummy;
+  
+  //for each event in the sequence
+  for (int i = 0; i < sender.size(); i++){
+    
+    //for each event in allEventTimes
+    for(int w = 0; w < allEventTimes.size(); w++){
+      
+      //for each eventtime between start[i] and end[i]
+      if(allEventTimes[w] >= start[i] && allEventTimes[w] <= end[i]){
+        
+        eventIDNew.push_back(eventID[i]);
+        senderNew.push_back(sender[i]);
+        targetNew.push_back(target[i]);
+        eventAttributeNew.push_back(eventAttribute[i]);
+        startNew.push_back(start[i]);
+        endNew.push_back(end[i]);
+        eventTime.push_back(allEventTimes[w]);
+        //is it a null-event or a true-event?
+        if(time[i] == allEventTimes[w]){
+          eventDummy.push_back(1);
+        }else{
+          eventDummy.push_back(0);
+        }
+        
+      }
+    }//closes w-loop
+  }//closes i-loop
+  
+  //combine all vectors into one
+  result = Rcpp::DataFrame::create(Rcpp::Named("eventID") = eventIDNew, 
+                                   Rcpp::Named("sender") = senderNew, 
+                                   Rcpp::Named("target") = targetNew,
+                                   Rcpp::Named("eventTime") = eventTime,
+                                   Rcpp::Named("eventDummy") = eventDummy, 
+                                   Rcpp::Named("eventAtRiskFrom") = startNew, 
+                                   Rcpp::Named("eventAtRiskUntil") = endNew, 
+                                   Rcpp::Named("eventAttribute") = eventAttributeNew);
+  return Rcpp::wrap(result);
+}

@@ -1055,7 +1055,7 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
     
     ## eventtypevar
     pastEventTypeVar <- eventtypevar
-
+    
     ## specify degreevariable
     if(is.null(degreeOnOtherVar)){
       currentEventDegreeVar <- degreevar
@@ -1075,7 +1075,7 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
     if(is.null(degreeOnOtherVar)){
       currentEventDegreeVar <- degreevar
       pastEventDegreeVar <- dataPastEvents[,2]
-        # nope doesn't work: dataPastEvents[,which(names(dataPastEvents) == as.name(degreevar) )]
+      # nope doesn't work: dataPastEvents[,which(names(dataPastEvents) == as.name(degreevar) )]
     }else{
       currentEventDegreeVar <- degreevar
       pastEventDegreeVar <- dataPastEvents[,3]
@@ -1123,7 +1123,7 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
             weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                          pastTimeVar < time[i] & countingProcessVar == 1]
+                                                 pastTimeVar < time[i] & countingProcessVar == 1]
           }
           
           ## run cpp-loop for all times
@@ -1225,14 +1225,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
           ## create vector of times, sender--target tie was made before
           timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                              pastTimeVar < time[i] & countingProcessVar == 1 &
-                                      pastEventFilterVar == eventfiltervalue]
+                                             pastEventFilterVar == eventfiltervalue]
           ## get weight
           if(is.null(weight)){
             weightInertiaPast <- rep(1, length(timesIntertiaPast))
           }else{
             weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                  pastTimeVar < time[i] & countingProcessVar == 1 &
-                                          pastEventFilterVar == eventfiltervalue]
+                                                 pastEventFilterVar == eventfiltervalue]
           }
           
           ## run cpp-loop for all times
@@ -1274,14 +1274,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             ## create vector of times, sender--target tie was made before
             timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                pastTimeVar < time[i] & countingProcessVar == 1 &
-                                        pastEventTypeVar == eventtypevar[i]]
+                                               pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
               weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == eventtypevar[i]]
+                                                   pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1308,14 +1308,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             ## create vector of times, degreevar--target tie was made before
             timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                pastTimeVar < time[i] & countingProcessVar == 1 &
-                                        pastEventTypeVar == eventtypevar[i]]
+                                               pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
               weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == eventtypevar[i]]
+                                                   pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1352,16 +1352,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             ## create vector of times, sender--target tie was made before
             timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                pastTimeVar < time[i] & countingProcessVar == 1 &
-                                        pastEventFilterVar == eventfiltervalue & 
-                                        pastEventTypeVar == eventtypevar[i]]
+                                               pastEventFilterVar == eventfiltervalue & 
+                                               pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
               weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventFilterVar == eventfiltervalue & 
-                                            pastEventTypeVar == eventtypevar[i]]
+                                                   pastEventFilterVar == eventfiltervalue & 
+                                                   pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1388,16 +1388,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
             ## create vector of times, sender--target tie was made before
             timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                pastTimeVar < time[i] & countingProcessVar == 1 &
-                                        pastEventFilterVar == eventfiltervalue & 
-                                        pastEventTypeVar == eventtypevar[i]]
+                                               pastEventFilterVar == eventfiltervalue & 
+                                               pastEventTypeVar == eventtypevar[i]]
             ## get weight
             if(is.null(weight)){
               weightInertiaPast <- rep(1, length(timesIntertiaPast))
             }else{
               weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventFilterVar == eventfiltervalue &
-                                            pastEventTypeVar == eventtypevar[i]]
+                                                   pastEventFilterVar == eventfiltervalue &
+                                                   pastEventTypeVar == eventtypevar[i]]
             }
             
             ## run cpp-loop for all times
@@ -1451,14 +1451,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     ## create vector of times, sender--target tie was made before
                     timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 & 
-                                                pastEventTypeVar == b]
+                                                       pastEventTypeVar == b]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
                       weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                            pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                    pastEventTypeVar == b]
+                                                           pastEventTypeVar == b]
                     }
                     
                     ## run cpp-loop for all times
@@ -1491,14 +1491,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     ## create vector of times, sender--target tie was made before
                     timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == b]
+                                                       pastEventTypeVar == b]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
                       weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                    pastEventTypeVar == b]
+                                                           pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                           pastEventTypeVar == b]
                     }
                     
                     ## run cpp-loop for all times
@@ -1536,14 +1536,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 ## create vector of times, sender--target tie was made before
                 timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == a]
+                                                   pastEventTypeVar == a]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
                   weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == a]
+                                                       pastEventTypeVar == a]
                 }
                 
                 ## run cpp-loop for all times
@@ -1576,14 +1576,14 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 ## create vector of times, sender--target tie was made before
                 timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == a]
+                                                   pastEventTypeVar == a]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
                   weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == a]
+                                                       pastEventTypeVar == a]
                 }
                 
                 ## run cpp-loop for all times
@@ -1638,16 +1638,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     ## create vector of times, degreevar--target tie was made before
                     timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 & 
-                                                pastEventTypeVar == b  & 
-                                                pastEventFilterVar == eventfiltervalue]
+                                                       pastEventTypeVar == b  & 
+                                                       pastEventFilterVar == eventfiltervalue]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
                       weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                            pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                    pastEventTypeVar == b & 
-                                                    pastEventFilterVar == eventfiltervalue]
+                                                           pastEventTypeVar == b & 
+                                                           pastEventFilterVar == eventfiltervalue]
                     }
                     
                     ## run cpp-loop for all times
@@ -1680,16 +1680,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                     ## create vector of times, sender--target tie was made before
                     timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == b & 
-                                                pastEventFilterVar == eventfiltervalue]
+                                                       pastEventTypeVar == b & 
+                                                       pastEventFilterVar == eventfiltervalue]
                     ## get weight
                     if(is.null(weight)){
                       weightInertiaPast <- rep(1, length(timesIntertiaPast))
                     }else{
                       weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                            pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                    pastEventTypeVar == b & 
-                                                    pastEventFilterVar == eventfiltervalue]
+                                                           pastEventTypeVar == b & 
+                                                           pastEventFilterVar == eventfiltervalue]
                     }
                     
                     ## run cpp-loop for all times
@@ -1726,17 +1726,17 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 
                 ## create vector of times, degreevar--target tie was made before
                 timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
-                                            pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == a & 
-                                            pastEventFilterVar == eventfiltervalue]
+                                                   pastTimeVar < time[i] & countingProcessVar == 1 &
+                                                   pastEventTypeVar == a & 
+                                                   pastEventFilterVar == eventfiltervalue]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
                   weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == a & 
-                                                pastEventFilterVar == eventfiltervalue]
+                                                       pastEventTypeVar == a & 
+                                                       pastEventFilterVar == eventfiltervalue]
                 }
                 
                 ## run cpp-loop for all times
@@ -1769,16 +1769,16 @@ degreeStat <- function(data, time, degreevar, halflife, weight = NULL,
                 ## create vector of times, degreevar--target tie was made before
                 timesIntertiaPast <- pastTimeVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                    pastTimeVar < time[i] & countingProcessVar == 1 &
-                                            pastEventTypeVar == a & 
-                                            pastEventFilterVar == eventfiltervalue]
+                                                   pastEventTypeVar == a & 
+                                                   pastEventFilterVar == eventfiltervalue]
                 ## get weight
                 if(is.null(weight)){
                   weightInertiaPast <- rep(1, length(timesIntertiaPast))
                 }else{
                   weightInertiaPast <- pastWeightVar[pastEventDegreeVar == currentEventDegreeVar[i] &
                                                        pastTimeVar < time[i] & countingProcessVar == 1 &
-                                                pastEventTypeVar == a & 
-                                                pastEventFilterVar == eventfiltervalue]
+                                                       pastEventTypeVar == a & 
+                                                       pastEventFilterVar == eventfiltervalue]
                 }
                 
                 ## run cpp-loop for all times
@@ -2412,7 +2412,7 @@ similarityStat <- function(data, time, sender, target,
   
   ## calculate part of decay function
   xlog <- log(2)/halflifeLastEvent 
-
+  
   ## prepare data set
   if(is.null(dataPastEvents)){
     if(is.null(eventvar)){
@@ -2560,34 +2560,34 @@ similarityStat <- function(data, time, sender, target,
                                            iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'total',
-                                                'nomatch', # or nomatch if no eventtypvar is specified
-                                                'sender', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'average',
-                                                'nomatch', # or nomatch if no eventtypvar is specified
-                                                'sender', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'total',
+                                                  'nomatch', # or nomatch if no eventtypvar is specified
+                                                  'sender', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'average',
+                                                  'nomatch', # or nomatch if no eventtypvar is specified
+                                                  'sender', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'target' & is.null(eventtypevar)){
@@ -2620,34 +2620,34 @@ similarityStat <- function(data, time, sender, target,
                                            iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'total',
-                                                'nomatch', # or nomatch if no eventtypvar is specified
-                                                'target', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'average',
-                                                'nomatch', # or nomatch if no eventtypvar is specified
-                                                'target', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'total',
+                                                  'nomatch', # or nomatch if no eventtypvar is specified
+                                                  'target', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'average',
+                                                  'nomatch', # or nomatch if no eventtypvar is specified
+                                                  'target', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'sender' & is.null(eventtypevar) == FALSE){
@@ -2680,34 +2680,34 @@ similarityStat <- function(data, time, sender, target,
                                            iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'total',
-                                                'match', # or nomatch if no eventtypvar is specified
-                                                'sender', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'average',
-                                                'match', # or nomatch if no eventtypvar is specified
-                                                'sender', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'total',
+                                                  'match', # or nomatch if no eventtypvar is specified
+                                                  'sender', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'average',
+                                                  'match', # or nomatch if no eventtypvar is specified
+                                                  'sender', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'target' & is.null(eventtypevar) == FALSE){
@@ -2740,34 +2740,34 @@ similarityStat <- function(data, time, sender, target,
                                            iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'total',
-                                                'match', # or nomatch if no eventtypvar is specified
-                                                'target', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                targetLoop, target[i], 
-                                                timeLoop, time[i], 
-                                                eventfiltervarLoop, 
-                                                eventfiltervalueLoop, 
-                                                eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                'average',
-                                                'match', # or nomatch if no eventtypvar is specified
-                                                'target', # or target
-                                                v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'total',
+                                                  'match', # or nomatch if no eventtypvar is specified
+                                                  'target', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                  targetLoop, target[i], 
+                                                  timeLoop, time[i], 
+                                                  eventfiltervarLoop, 
+                                                  eventfiltervalueLoop, 
+                                                  eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                  'average',
+                                                  'match', # or nomatch if no eventtypvar is specified
+                                                  'target', # or target
+                                                  v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                  w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                  iLoop, 0)
+            }
           }
         }
       } # closes if w and v are not null
@@ -2864,34 +2864,34 @@ similarityStat <- function(data, time, sender, target,
                                               iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'total',
-                                                   'nomatch', # or nomatch if no eventtypvar is specified
-                                                   'sender', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'average',
-                                                   'nomatch', # or nomatch if no eventtypvar is specified
-                                                   'sender', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'total',
+                                                     'nomatch', # or nomatch if no eventtypvar is specified
+                                                     'sender', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'average',
+                                                     'nomatch', # or nomatch if no eventtypvar is specified
+                                                     'sender', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'target' & is.null(eventtypevar)){
@@ -2924,34 +2924,34 @@ similarityStat <- function(data, time, sender, target,
                                               iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'total',
-                                                   'nomatch', # or nomatch if no eventtypvar is specified
-                                                   'target', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'average',
-                                                   'nomatch', # or nomatch if no eventtypvar is specified
-                                                   'target', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'total',
+                                                     'nomatch', # or nomatch if no eventtypvar is specified
+                                                     'target', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'average',
+                                                     'nomatch', # or nomatch if no eventtypvar is specified
+                                                     'target', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'sender' & is.null(eventtypevar) == FALSE){
@@ -2984,34 +2984,34 @@ similarityStat <- function(data, time, sender, target,
                                               iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'total',
-                                                   'match', # or nomatch if no eventtypvar is specified
-                                                   'sender', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'average',
-                                                   'match', # or nomatch if no eventtypvar is specified
-                                                   'sender', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'total',
+                                                     'match', # or nomatch if no eventtypvar is specified
+                                                     'sender', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'average',
+                                                     'match', # or nomatch if no eventtypvar is specified
+                                                     'sender', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
           }
         }
         if(senderOrTarget == 'target' & is.null(eventtypevar) == FALSE){
@@ -3044,34 +3044,34 @@ similarityStat <- function(data, time, sender, target,
                                               iLoop, 0)
           }
           if ( is.null(whichSimilarity) == FALSE ){
-          if(whichSimilarity == 'total'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'total',
-                                                   'match', # or nomatch if no eventtypvar is specified
-                                                   'target', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
-          if(whichSimilarity == 'average'){
-            result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
-                                                   targetLoop, target[i], 
-                                                   timeLoop, time[i], 
-                                                   eventfiltervarLoop, 
-                                                   eventfiltervalueLoop, 
-                                                   eventtypevarLoop, eventtypevarMirrorImage[i], 
-                                                   'average',
-                                                   'match', # or nomatch if no eventtypvar is specified
-                                                   'target', # or target
-                                                   v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
-                                                   w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
-                                                   iLoop, 0)
-          }
+            if(whichSimilarity == 'total'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'total',
+                                                     'match', # or nomatch if no eventtypvar is specified
+                                                     'target', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
+            if(whichSimilarity == 'average'){
+              result[i] <- similarityTotalAverageCpp(senderLoop, sender[i], 
+                                                     targetLoop, target[i], 
+                                                     timeLoop, time[i], 
+                                                     eventfiltervarLoop, 
+                                                     eventfiltervalueLoop, 
+                                                     eventtypevarLoop, eventtypevarMirrorImage[i], 
+                                                     'average',
+                                                     'match', # or nomatch if no eventtypvar is specified
+                                                     'target', # or target
+                                                     v, # sender-sim: v = who else used b (match= in same way); target-sim: v = what else has a said?
+                                                     w, # sender-sim: w = what else has a said?; target-sim: w = who else said b? (??match?? here too for target-sim?)
+                                                     iLoop, 0)
+            }
           }
         }
       } # closes if w and v are not null
@@ -4693,31 +4693,31 @@ createRemDataset <- function(data, sender, target, eventSequence,
       if(is.null(startDate)){
         ## repeated events start 1eventday after the last identical event occurred
         if(is.null(eventAttribute)){
-          data$duplicate.sender.target <- duplicated(paste0(sender, target))
+          duplicateSenderTarget <- duplicated(paste0(sender, target))
         }else{
-          data$duplicate.sender.target <- duplicated(paste0(sender, target, eventAttribute))
+          duplicateSenderTarget <- duplicated(paste0(sender, target, eventAttribute))
         }
         ##
         for(a in 1:length(sender)){
-          if(data$duplicate.sender.target[a] == FALSE){
-            data$start[a] <- 0
+          if(duplicateSenderTarget[a] == FALSE){
+            start[a] <- 0
           }else{
             # start begins again from the next possible event
-            data$start[a] <- ifelse(is.null(eventAttribute),
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventSequence < eventSequence[a]])), 
-                                    suppressWarnings(max(eventSequence[sender == sender[a] & 
-                                                                         target == target[a] &
-                                                                         eventAttribute == eventAttribute[a] & 
-                                                                         eventSequence < eventSequence[a]])))
-            if(data$start[a] == -Inf){
+            start[a] <- ifelse(is.null(eventAttribute),
+                               suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                    target == target[a] &
+                                                                    eventSequence < eventSequence[a]])), 
+                               suppressWarnings(max(eventSequence[sender == sender[a] & 
+                                                                    target == target[a] &
+                                                                    eventAttribute == eventAttribute[a] & 
+                                                                    eventSequence < eventSequence[a]])))
+            if(start[a] == -Inf){
               ## special case where two events occurr at the same time - the second
               ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-              data$start[a] <- 0
+              start[a] <- 0
             }
             # now give it the next possible value
-            data$start[a] <- which(allEventTimes > data$start[a])[1]
+            start[a] <- which(allEventTimes > start[a])[1]
           }
         }#closes a-loop
       }else{ # start-Date is not NULL
@@ -4738,17 +4738,17 @@ createRemDataset <- function(data, sender, target, eventSequence,
         }
         ## repeated events start 1eventday after the last identical event occurred
         if(is.null(eventAttribute)){
-          data$duplicate.sender.target <- duplicated(paste0(sender, target))
+          duplicateSenderTarget <- duplicated(paste0(sender, target))
         }else{
-          data$duplicate.sender.target <- duplicated(paste0(sender, target, eventAttribute))
+          duplicateSenderTarget <- duplicated(paste0(sender, target, eventAttribute))
         }
         ## for each variable:
         for(a in 1:length(sender)){
-          if(data$duplicate.sender.target[a] == FALSE){
+          if(duplicateSenderTarget[a] == FALSE){
             if(startDate[a] < min(time)){
-              data$start[a] <- 0
+              start[a] <- 0
             }else{
-              data$start[a] <- min(eventSequence[time >= startDate[a]]) 
+              start[a] <- min(eventSequence[time >= startDate[a]]) 
             }
           }else{ # there are duplicates! 
             ## two things need to be considered: 
@@ -4779,7 +4779,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
             whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
             ## assign it the max value of the two possibilities
             whichStartPoint <- c(whichStartPointA, whichStartPointB)
-            data$start[a] <- max(whichStartPoint)
+            start[a] <- max(whichStartPoint)
           }
         }#closes a-loop
       }
@@ -4787,19 +4787,19 @@ createRemDataset <- function(data, sender, target, eventSequence,
       ## here too: correct start-variable for duplicate events
       ## repeated events start 1eventday after the last identical event occurred
       if(is.null(eventAttribute)){
-        data$duplicate.sender.target <- duplicated(paste0(sender, target))
+        duplicateSenderTarget <- duplicated(paste0(sender, target))
       }else{
-        data$duplicate.sender.target <- duplicated(paste0(sender, target, eventAttribute))
+        duplicateSenderTarget <- duplicated(paste0(sender, target, eventAttribute))
       }
       
       for(a in 1:length(sender)){
-        if(data$duplicate.sender.target[a] == FALSE){ # no duplicates
+        if(duplicateSenderTarget[a] == FALSE){ # no duplicates
           # if the start value is smaller than the lowest value of the event sequence
           if(start[a] < min(eventSequence)){
-            data$start[a] <- 0
+            start[a] <- 0
           }else{
             # otherwise take the start value that is provided
-            data$start[a] <- start[a]
+            start[a] <- start[a]
           }
         }else{ # if there are duplicates! Attention!
           if(isTRUE(atEventTimesOnly)){
@@ -4824,7 +4824,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
             whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
             ## Finally: assign it the max value of the two possibilities
             whichStartPoint <- c(whichStartPointA, whichStartPointB)
-            data$start[a] <- max(whichStartPoint)
+            start[a] <- max(whichStartPoint)
             
           }else{ #not at event times
             # (1) take the start value provided
@@ -4847,7 +4847,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
             
             ## Finally: 
             whichStartPoint <- c(whichStartPointA, whichStartPointB)
-            data$start[a] <- max(whichStartPoint)
+            start[a] <- max(whichStartPoint)
           }
         }
         
@@ -4861,19 +4861,19 @@ createRemDataset <- function(data, sender, target, eventSequence,
       if(is.null(endDate)){
         ## events that are repeated in future end after they occurr
         if(is.null(eventAttribute)){
-          data$duplicate.sender.target.fromlast <- duplicated(paste0(sender, target), fromLast = TRUE)
+          duplicateSenderTargetFromLast <- duplicated(paste0(sender, target), fromLast = TRUE)
         }else{
-          data$duplicate.sender.target.fromlast <- duplicated(paste0(sender, target, eventAttribute), fromLast = TRUE)
+          duplicateSenderTargetFromLast <- duplicated(paste0(sender, target, eventAttribute), fromLast = TRUE)
         }
         ##
         for(a in 1:length(sender)){
-          if(isTRUE(data$duplicate.sender.target.fromlast[a])){
-            data$end[a] <- eventSequence[a]
+          if(isTRUE(duplicateSenderTargetFromLast[a])){
+            end[a] <- eventSequence[a]
           }else{
             if(isTRUE(untilEventOccurrs)){
-              data$end[a] <- eventSequence[a]
+              end[a] <- eventSequence[a]
             }else{
-              data$end[a] <- max(eventSequence)
+              end[a] <- max(eventSequence)
             }
           }
         }#closes a-loop
@@ -4896,25 +4896,25 @@ createRemDataset <- function(data, sender, target, eventSequence,
         }
         # find duplicates
         if(is.null(eventAttribute)){
-          data$duplicate.sender.target.fromlast <- duplicated(paste0(sender, target), fromLast = TRUE)
+          duplicateSenderTargetFromLast <- duplicated(paste0(sender, target), fromLast = TRUE)
         }else{
-          data$duplicate.sender.target.fromlast <- duplicated(paste0(sender, target, eventAttribute), fromLast = TRUE)
+          duplicateSenderTargetFromLast <- duplicated(paste0(sender, target, eventAttribute), fromLast = TRUE)
         }
         
         # loop over all events
         for(a in 1:length(sender)){
           # duplicates
-          if(isTRUE(data$duplicate.sender.target.fromlast[a])){
-            data$end[a] <- eventSequence[a]
+          if(isTRUE(duplicateSenderTargetFromLast[a])){
+            end[a] <- eventSequence[a]
           }else{
             if(isTRUE(untilEventOccurrs)){
-              data$end[a] <- eventSequence[a]
+              end[a] <- eventSequence[a]
             }else{
               # if endDate is later than max(time)
               if(endDate[a] > max(time)){
-                data$end[a] <- max(eventSequence)
+                end[a] <- max(eventSequence)
               }else{
-                data$end[a] <- max(eventSequence[endDate[a] < time ])
+                end[a] <- max(eventSequence[endDate[a] < time ])
               }
             }
           }
@@ -4922,57 +4922,52 @@ createRemDataset <- function(data, sender, target, eventSequence,
       }
     }else{
       if(isTRUE(untilEventOccurrs)){
-        data$end <- eventSequence
+        end <- eventSequence
       }else{
-        data$end <- end
-        
+        end <- end
       }
     }
   }
   
-  ############## 1. 
-  ## 1. fill risk set until 'end'-variable
-  if(atEventTimesOnly == TRUE & includeAllPossibleEvents == FALSE){
-    # for each event in the data set
-    for(i in 1:nrow(data)){
-      # for each timepoint an event could have been possible
-      ##war data$start[i]:eventSequence[i]
-      for(j in allEventTimes[allEventTimes >= data$start[i] & allEventTimes <= data$end[i]]){
-        temp <- data[i,]
-        temp$eventTime <- j
-        temp$eventdummy <- ifelse(j == eventSequence[i], 1, 0)
-        if(i == 1 & data$start[i] == j){
-          dataNullEvents <- temp
-        }else{
-          dataNullEvents <- rbind(dataNullEvents, temp)
-        }
-      }#closes j-loop
-    }#closes i-loop
+  ## create an event-ID variable
+  eventID <- paste0(rep('eventID', length(sender)), 1:length(sender))
+  
+  ## create a 
+  if(is.null(eventAttribute)){
+    eventAttr <- rep("1", length(sender))
+    eventAttr <- as.character(eventAttr)
+  }else{
+    eventAttr <- as.character(eventAttribute)
+  }
+  
+  ############## 1. and 2.
+  # 1. fill risk set until 'end'-variable
+  # 2. fill risk set until end-variable, use any time point (regardless if an 
+  # event occurred or not) risk set contains all events that eventually took place
+  if(includeAllPossibleEvents == FALSE){
+    if(isTRUE(atEventTimesOnly)){
+      # 1. includeAllPossibleEvents = FALSE and atEventTimesOnly = TRUE
+      # above: allEventTimes <- unique(eventSequence)
+      dataNullEvents <- createNullEvents(eventID, 
+                                         sender, target, eventAttr,
+                                         eventSequence, 
+                                         start, end, allEventTimes)
+    }else{
+      # 2. includeAllPossibleEvents = FALSE and atEventTimesOnly = FALSE
+      allEventTimes <- min(start):max(end)
+      dataNullEvents <- createNullEvents(eventID, 
+                                         sender, target, eventAttr, 
+                                         eventSequence, 
+                                         start, end, allEventTimes)
+    }
+    ## remove useless eventattribute-Variable if set to null
+    if(is.null(eventAttribute)){
+      dataNullEvents <- dataNullEvents[,1:7]
+    }
   }
   ############## 
   
-  ############## 2. 
-  ## 2. fill risk set until end-variable, use any time point (regardless if an event occurred or not)
-  ## risk set contains all events that eventually took place
-  if(atEventTimesOnly == FALSE &  includeAllPossibleEvents == FALSE){
-    # for each event in the data set
-    for(i in 1:nrow(data)){
-      # for each timepoint an event could have been possible
-      ##war data$start[i]:eventSequence[i]
-      for(j in data$start[i]:data$end[i]){
-        temp <- data[i,]
-        temp$eventTime <- j
-        temp$eventdummy <- ifelse(j == eventSequence[i], 1, 0)
-        if(i == 1 & data$start[i] == j){
-          dataNullEvents <- temp
-        }else{
-          dataNullEvents <- rbind(dataNullEvents, temp)
-        }
-      }#closes j-loop
-    }#closes i-loop
-  }
-  ############## 
-  
+  ##TODO: Nr 3 and 4 are still slow - recode them in cpp
   ############## 3. 
   if(atEventTimesOnly == TRUE & includeAllPossibleEvents == TRUE){
     # for each event in the data set
@@ -5058,12 +5053,12 @@ createRemDataset <- function(data, sender, target, eventSequence,
   
   ## DONE:
   if(isTRUE(returnInputData)){
+    data <- cbind(eventID, data, start, end)
     return(list(dataNullEvents, data))
   }else{
     return(dataNullEvents)
   }
 }
-
 
 ################################################################################
 ## Calculate time to next event or time since date
@@ -5122,5 +5117,5 @@ timeToEvent <- function(time, type = 'time-to-next-event',
   
   ## 
   return(timeToEventVar)
-  }
+}
 

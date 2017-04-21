@@ -193,7 +193,3 @@ dtrem$fourCycle.neg <- fourCycleStat(data = dtrem,
                                      halflife = 20)
 }
 %\keyword{key}
-
-
-
-

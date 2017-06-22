@@ -8,6 +8,10 @@ sudo: false
 
 cache: packages
 
+github_packages:
+  - assertthat
+  - devtools
+
 r_check_args: --as-cran
 
 notifications:

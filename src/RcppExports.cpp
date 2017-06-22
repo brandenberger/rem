@@ -5,71 +5,6 @@
 
 using namespace Rcpp;
 
-// inertiaCpp
-NumericVector inertiaCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string inertiatype);
-RcppExport SEXP rem_inertiaCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP inertiatypeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
-    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< std::string >::type inertiatype(inertiatypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(inertiaCpp(time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, inertiatype));
-    return rcpp_result_gen;
-END_RCPP
-}
-// degreeCpp
-NumericVector degreeCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> degreevar, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string degreetype);
-RcppExport SEXP rem_degreeCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP degreevarSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP degreetypeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type degreevar(degreevarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
-    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< std::string >::type degreetype(degreetypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(degreeCpp(time, weightvar, degreevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype));
-    return rcpp_result_gen;
-END_RCPP
-}
-// degreeOneModeCpp
-NumericVector degreeOneModeCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> degreevar, std::vector<std::string> degreeothermodevar, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string degreetype);
-RcppExport SEXP rem_degreeOneModeCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP degreevarSEXP, SEXP degreeothermodevarSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP degreetypeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type degreevar(degreevarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type degreeothermodevar(degreeothermodevarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
-    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< std::string >::type degreetype(degreetypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(degreeOneModeCpp(time, weightvar, degreevar, degreeothermodevar, typevar, type1, type2, attrvar, attr1, attr2, xlog, degreetype));
-    return rcpp_result_gen;
-END_RCPP
-}
 // fourCycleCpp
 double fourCycleCpp(std::vector<std::string> sender, std::string currentSender, std::vector<std::string> target, std::string currentTarget, std::vector<std::string> typevar, std::string currentType, NumericVector time, double currentTime, NumericVector weightvar, double xlog, std::vector<std::string> attrvarAaj, std::string attrAaj, std::vector<std::string> attrvarBib, std::string attrBib, std::vector<std::string> attrvarCij, std::string attrCij, std::string fourCycleType, std::vector<std::string> w, std::vector<std::string> x, int i, int begin);
 RcppExport SEXP rem_fourCycleCpp(SEXP senderSEXP, SEXP currentSenderSEXP, SEXP targetSEXP, SEXP currentTargetSEXP, SEXP typevarSEXP, SEXP currentTypeSEXP, SEXP timeSEXP, SEXP currentTimeSEXP, SEXP weightvarSEXP, SEXP xlogSEXP, SEXP attrvarAajSEXP, SEXP attrAajSEXP, SEXP attrvarBibSEXP, SEXP attrBibSEXP, SEXP attrvarCijSEXP, SEXP attrCijSEXP, SEXP fourCycleTypeSEXP, SEXP wSEXP, SEXP xSEXP, SEXP iSEXP, SEXP beginSEXP) {
@@ -180,28 +115,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< int >::type i(iSEXP);
     Rcpp::traits::input_parameter< int >::type begin(beginSEXP);
     rcpp_result_gen = Rcpp::wrap(similarityComplexCpp(sender, currentSender, target, currentTarget, time, currentTime, xlog, halflifeTimeDifference, eventAttributeVar, eventAttribute, eventTypeVar, currentType, matchNomatchSim, senderTargetSim, v, w, i, begin));
-    return rcpp_result_gen;
-END_RCPP
-}
-// reciprocityCpp
-NumericVector reciprocityCpp(NumericVector time, NumericVector weightvar, std::vector<std::string> sender, std::vector<std::string> target, std::vector<std::string> typevar, std::string type1, std::string type2, std::vector<std::string> attrvar, std::string attr1, std::string attr2, double xlog, std::string reciprocitytype);
-RcppExport SEXP rem_reciprocityCpp(SEXP timeSEXP, SEXP weightvarSEXP, SEXP senderSEXP, SEXP targetSEXP, SEXP typevarSEXP, SEXP type1SEXP, SEXP type2SEXP, SEXP attrvarSEXP, SEXP attr1SEXP, SEXP attr2SEXP, SEXP xlogSEXP, SEXP reciprocitytypeSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject rcpp_result_gen;
-    Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericVector >::type time(timeSEXP);
-    Rcpp::traits::input_parameter< NumericVector >::type weightvar(weightvarSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type sender(senderSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type target(targetSEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type typevar(typevarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type type1(type1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type type2(type2SEXP);
-    Rcpp::traits::input_parameter< std::vector<std::string> >::type attrvar(attrvarSEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr1(attr1SEXP);
-    Rcpp::traits::input_parameter< std::string >::type attr2(attr2SEXP);
-    Rcpp::traits::input_parameter< double >::type xlog(xlogSEXP);
-    Rcpp::traits::input_parameter< std::string >::type reciprocitytype(reciprocitytypeSEXP);
-    rcpp_result_gen = Rcpp::wrap(reciprocityCpp(time, weightvar, sender, target, typevar, type1, type2, attrvar, attr1, attr2, xlog, reciprocitytype));
     return rcpp_result_gen;
 END_RCPP
 }

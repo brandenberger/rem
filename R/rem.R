@@ -2278,7 +2278,7 @@ similarityStat <- function(data, time, sender, target,
                            dataPastEvents = NULL,
                            showprogressbar = FALSE, 
                            inParallel = FALSE, cluster = NULL){
-  
+	
   ####### check inputs
   ## check if sender input is available
   if ( is.null(sender) ) {

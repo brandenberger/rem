@@ -1,4 +1,4 @@
-useDynLib(rem)
+useDynLib(rem, .registration = TRUE)
 import("doParallel")
 import("foreach")
 importFrom("Rcpp", evalCpp)

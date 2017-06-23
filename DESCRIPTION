@@ -1,8 +1,8 @@
 Package: rem
 Type: Package
 Title: Relational Event Models (REM)
-Version: 1.2.7
-Date: 2017-06-21
+Version: 1.2.8
+Date: 2017-06-23
 Author: Laurence Brandenberger
 Maintainer: Laurence Brandenberger <laurence.brandenberger@eawag.ch>
 Description: Calculate endogenous network effects in event sequences and fit relational event models (REM): Using network event sequences (where each tie between a sender and a target in a network is time-stamped), REMs can measure how networks form and evolve over time. Endogenous patterns such as popularity effects, inertia, similarities, cycles or triads can be calculated and analyzed over time.

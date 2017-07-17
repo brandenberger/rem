@@ -2074,11 +2074,12 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
       eventtypevalueLoop <- eventtypevalue
     }
     if(is.null(eventfilterAB)){
-      eventfiltervarABLoop <- rep("1", nrow(dataPastEvents))
+      eventfiltervarABLoop <- rep("1", length(sender)) # not dataPastEvents, bc AB is used in the i-loop (outero loop)
       eventfilterABLoop <- "1"
     }else{
-      eventfiltervarABLoop <- dataPastEvents[,6]
-      eventfilterABLoop <- eventfilterAB
+	  #TODO: fix this: print('Cannot provide dataPastEvents and specifiy AB filter. Will be fixed in future version.')
+      eventfiltervarABLoop <- rep("1", length(sender)) #dataPastEvents[,6]
+      eventfilterABLoop <- "1" #eventfilterAB
     }
     if(is.null(eventfilterAJ)){
       eventfiltervarAJLoop <- rep("1", nrow(dataPastEvents))
@@ -2217,13 +2218,13 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
                             eventtypevarLoop != eventtypevar[i]]
         }
         x <- unique(x)
-        
+
         ## 
         if(length(x) == 0 | length(w) == 0){
           result[i] <- 0
         }else{
           # find i in reduced data set
-          if(is.null(eventvar)){
+          if(is.null(eventvar) & is.null(dataPastEvents)){
             iLoop <- i-1 # bc cpp-loops start at 0 not 1
           }else{
             iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
@@ -3305,7 +3306,7 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
     
     ## return sequence
     if(isTRUE(returnDateSequenceData)){
-      print('fuck this')
+      #print('fuck this')
       return(sequence)
       message('The output represents a data.frame with the date in the first
               column and the corresponding event sequence value in the second

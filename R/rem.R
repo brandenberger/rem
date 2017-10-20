@@ -2446,6 +2446,7 @@ similarityStat <- function(data, time, sender, target,
         eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
         eventtypevarLoop <- rep("1", length(senderLoop))
       }else{
+	    eventtypevarMirrorImage <- eventtypevar
         eventtypevarLoop <- eventtypevar[eventvar == 1]
       }
       # eventfiltervar
@@ -2467,6 +2468,7 @@ similarityStat <- function(data, time, sender, target,
       eventtypevarMirrorImage <- rep("1", length(sender)) # if not given, define at as 1 for each event
       eventtypevarLoop <- rep("1", length(senderLoop))
     }else{
+	  eventtypevarMirrorImage <- eventtypevar
       eventtypevarLoop <- dataPastEvents[,4]
     }
     # eventfiltervar
@@ -2529,7 +2531,7 @@ similarityStat <- function(data, time, sender, target,
         # find i in (reduced) data set
         
         iLoop <- length(timeLoop[timeLoop < time[i]]) #+ 1 - 1 # + 1 bc in the loop it's <; however cpp starts at 0, so -1
-        
+
         ## hand over to cpp
         if(senderOrTarget == 'sender' & is.null(eventtypevar)){
           # 1. sender sim, no match
@@ -2654,7 +2656,7 @@ similarityStat <- function(data, time, sender, target,
         if(senderOrTarget == 'sender' & is.null(eventtypevar) == FALSE){
           # 1. sender sim, match
           if(is.null(whichSimilarity) & is.null(halflifeLastEvent) == FALSE &  is.null(halflifeTimeBetweenEvents)){
-            result <- similaritySimpleCpp(senderLoop, sender[i], 
+			result <- similaritySimpleCpp(senderLoop, sender[i], 
                                           targetLoop, target[i], 
                                           timeLoop, time[i], 
                                           xlog, eventfiltervarLoop, 
@@ -3306,7 +3308,6 @@ eventSequence <- function(datevar, dateformat = NULL, data = NULL,
     
     ## return sequence
     if(isTRUE(returnDateSequenceData)){
-      #print('fuck this')
       return(sequence)
       message('The output represents a data.frame with the date in the first
               column and the corresponding event sequence value in the second
@@ -4701,7 +4702,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
         ##
         for(a in 1:length(sender)){
           if(duplicateSenderTarget[a] == FALSE){
-            start[a] <- 0
+            start[a] <- min(eventSequence)
           }else{
             # start begins again from the next possible event
             start[a] <- ifelse(is.null(eventAttribute),
@@ -4715,10 +4716,11 @@ createRemDataset <- function(data, sender, target, eventSequence,
             if(start[a] == -Inf){
               ## special case where two events occurr at the same time - the second
               ## event is duplicated, but there is no event earlier than itself, so it gets start = 0
-              start[a] <- 0
+              start[a] <- min(eventSequence)
             }
             # now give it the next possible value
-            start[a] <- which(allEventTimes > start[a])[1]
+			# TODO: note: changed this from "which(allEventTimes > start[a])[1]" to "allEventTimes[which(allEventTimes > start[a])[1]]"
+            start[a] <- allEventTimes[which(allEventTimes > start[a])[1]]
           }
         }#closes a-loop
       }else{ # start-Date is not NULL
@@ -4747,7 +4749,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
         for(a in 1:length(sender)){
           if(duplicateSenderTarget[a] == FALSE){
             if(startDate[a] < min(time)){
-              start[a] <- 0
+              start[a] <- min(eventSequence)
             }else{
               start[a] <- min(eventSequence[time >= startDate[a]]) 
             }
@@ -4777,7 +4779,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
               whichStartPointA <- 0
             }
             # now give it the next possible value
-            whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
+            whichStartPointA <- allEventTimes[which(allEventTimes > whichStartPointA)[1]]
             ## assign it the max value of the two possibilities
             whichStartPoint <- c(whichStartPointA, whichStartPointB)
             start[a] <- max(whichStartPoint)
@@ -4819,10 +4821,10 @@ createRemDataset <- function(data, sender, target, eventSequence,
             # special case where two events occurr at the same time - the second
             # event is duplicated, but there is no event earlier than itself, so it gets start = 0
             if(whichStartPointA == -Inf){
-              whichStartPointA <- 0
+              whichStartPointA <- min(eventSequence)
             }
             # now give it the next possible value
-            whichStartPointA <- which(allEventTimes > whichStartPointA)[1]
+            whichStartPointA <- allEventTimes[which(allEventTimes > whichStartPointA)[1]]
             ## Finally: assign it the max value of the two possibilities
             whichStartPoint <- c(whichStartPointA, whichStartPointB)
             start[a] <- max(whichStartPoint)
@@ -4842,7 +4844,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
             # special case where two events occurr at the same time - the second
             # event is duplicated, but there is no event earlier than itself, so it gets start = 0
             if(whichStartPointA == -Inf){
-              whichStartPointA <- 0
+              whichStartPointA <- min(eventSequence)
             }
             whichStartPointA <- whichStartPointA+1 # 1 eventday after the previous event took place
             

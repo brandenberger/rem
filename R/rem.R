@@ -1896,7 +1896,7 @@ fourCycleStat <- function(data, time, sender, target, halflife, weight = NULL,
   }else{
     eventtypevalue <- "standard"
   }
-  
+
   ## check if event-attribute inputs are available and correctly specified
   if ( is.null(eventfiltervar) == FALSE ) {
     # length test
@@ -4951,17 +4951,27 @@ createRemDataset <- function(data, sender, target, eventSequence,
     if(isTRUE(atEventTimesOnly)){
       # 1. includeAllPossibleEvents = FALSE and atEventTimesOnly = TRUE
       # above: allEventTimes <- unique(eventSequence)
+      # for each event: check how many times it'll be in the dataset: 
+      counternrow <- 0
+      for(b in 1:length(start)){
+        counternrow <- counternrow + length(allEventTimes[allEventTimes >= start[b] & allEventTimes <= end[b]])
+      }
+      #
       dataNullEvents <- createNullEvents(eventID, 
                                          sender, target, eventAttr,
                                          eventSequence, 
-                                         start, end, allEventTimes)
+                                         start, end, allEventTimes, counternrow)
     }else{
       # 2. includeAllPossibleEvents = FALSE and atEventTimesOnly = FALSE
       allEventTimes <- min(start):max(end)
+      counternrow <- 0
+      for(b in 1:length(start)){
+        counternrow <- counternrow + length(allEventTimes[allEventTimes >= start[b] & allEventTimes <= end[b]])
+      }
       dataNullEvents <- createNullEvents(eventID, 
                                          sender, target, eventAttr, 
                                          eventSequence, 
-                                         start, end, allEventTimes)
+                                         start, end, allEventTimes, counternrow)
     }
     ## remove useless eventattribute-Variable if set to null
     if(is.null(eventAttribute)){
@@ -4980,7 +4990,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
                                allEventTimes[i] <= possibleEvents[,4],]
       # specify whether or not an event occurred
       temp$eventTime <- allEventTimes[i]
-      temp$eventdummy <- 0
+      temp$eventDummy <- 0
       if(i != 1){
         dataNullEvents <- rbind(dataNullEvents, temp)
       }else{
@@ -4990,10 +5000,10 @@ createRemDataset <- function(data, sender, target, eventSequence,
     
     for(j in 1:nrow(data)){
       if(is.null(eventAttribute)){
-        dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+        dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                     dataNullEvents$eventTime == eventSequence[j]] <- 1
       }else{
-        dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+        dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                     dataNullEvents$eventTime == eventSequence[j] & dataNullEvents[,5] == eventAttribute[j] ] <- 1
       }
     }#closes j-loop
@@ -5009,7 +5019,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
                                  i <= possibleEvents[,4],]
         # specify whether or not an event occurred
         temp$eventTime <- i
-        temp$eventdummy <- 0
+        temp$eventDummy <- 0
         if(i != 1){
           dataNullEvents <- rbind(dataNullEvents, temp)
         }else{
@@ -5018,10 +5028,10 @@ createRemDataset <- function(data, sender, target, eventSequence,
       }#closes i-loop
       for(j in 1:nrow(data)){
         if(is.null(eventAttribute)){
-          dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+          dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                       dataNullEvents$eventTime == eventSequence[j]] <- 1
         }else{
-          dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+          dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                       dataNullEvents$eventTime == eventSequence[j] & dataNullEvents[,5] == eventAttribute[j] ] <- 1
         }
       }#closes j-loop
@@ -5034,7 +5044,7 @@ createRemDataset <- function(data, sender, target, eventSequence,
                                  i <= possibleEvents[,4],]
         # specify whether or not an event occurred
         temp$eventTime <- i
-        temp$eventdummy <- 0
+        temp$eventDummy <- 0
         if(i != 1){
           dataNullEvents <- rbind(dataNullEvents, temp)
         }else{
@@ -5043,10 +5053,10 @@ createRemDataset <- function(data, sender, target, eventSequence,
       }#closes i-loop
       for(j in 1:nrow(data)){
         if(is.null(eventAttribute)){
-          dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+          dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                       dataNullEvents$eventTime == eventSequence[j]] <- 1
         }else{
-          dataNullEvents$eventdummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
+          dataNullEvents$eventDummy[dataNullEvents[,1] == sender[j] & dataNullEvents[,2] == target[j] & 
                                       dataNullEvents$eventTime == eventSequence[j] & dataNullEvents[,5] == eventAttribute[j] ] <- 1
         }
       }#closes j-loop 
@@ -5062,6 +5072,8 @@ createRemDataset <- function(data, sender, target, eventSequence,
     return(dataNullEvents)
   }
 }
+
+
 
 ################################################################################
 ## Calculate time to next event or time since date
